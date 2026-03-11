@@ -502,7 +502,10 @@ struct ImportLocalFolderModifier: ViewModifier {
                     
                     if count > 1000 {
                         await MainActor.run {
-                            alert(title: .localizable(.sidebarLocalFolderTooLargeAlertTitle), error: FolderTooLargeError())
+                            alert(
+                                title: .init(localizable: .sidebarLocalFolderTooLargeAlertTitle),
+                                error: FolderTooLargeError()
+                            )
                         }
                         return
                     }
