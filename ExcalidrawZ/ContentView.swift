@@ -19,7 +19,6 @@ import SFSafeSymbols
 struct ContentView: View {
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(\.alertToast) private var alertToast
     @EnvironmentObject var appPreference: AppPreference
     
     @AppStorage("DisableCloudSync") var isICloudDisabled: Bool = false
@@ -57,6 +56,7 @@ struct ContentView: View {
             .modifier(ShareFileModifier())
             .modifier(LocalFolderMonitorModifier())
             .modifier(PDFViewerModifier())
+            .modifier(MenuBarImportHandlerModifier())
             .environmentObject(fileState)
             .environmentObject(exportState)
             .environmentObject(layoutState)
@@ -67,9 +67,6 @@ struct ContentView: View {
             .swiftyAlert(logs: true)
             .bindWindow($window)
             .containerSizeClassInjection()
-            .onReceive(NotificationCenter.default.publisher(for: .shouldHandleImport)) { notification in
-                handleImport(notification)
-            }
             .onReceive(NotificationCenter.default.publisher(for: .didOpenFromUrls)) { notification in
                 handleOpenFromURLs(notification)
             }
@@ -103,20 +100,6 @@ struct ContentView: View {
             ContentViewModern()
         } else {
             ContentViewLagacy()
-        }
-    }
-    
-    private func handleImport(_ notification: Notification) {
-        guard let urls = notification.object as? [URL] else { return }
-        if window?.isKeyWindow == true {
-            Task.detached {
-                do {
-                    try await fileState.importFiles(urls)
-                } catch {
-                    await alertToast(error)
-                    print("[handleImport] error: \(error)")
-                }
-            }
         }
     }
     
