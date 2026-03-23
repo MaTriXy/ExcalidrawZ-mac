@@ -141,6 +141,12 @@ enum Arrowhead: String, Codable {
     case crowfootOne = "crowfoot_one"
     case crowfootMany = "crowfoot_many"
     case crowfootOneOrMany = "crowfoot_one_or_many"
+    case cardinalityOne = "cardinality_one"
+    case cardinalityMany = "cardinality_many"
+    case cardinalityOneOrMany = "cardinality_one_or_many"
+    case cardinalityExactlyOne = "cardinality_exactly_one"
+    case cardinalityZeroOrOne = "cardinality_zero_or_one"
+    case cardinalityZeroOrMany = "cardinality_zero_or_many"
 }
 
 protocol ExcalidrawLinearElementBase: ExcalidrawElementBase {

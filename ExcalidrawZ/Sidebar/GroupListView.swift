@@ -471,6 +471,7 @@ struct ImportLocalFolderModifier: ViewModifier {
                 
                 for url in urls where folders.contains(where: { $0.url == url }) == false {
                     guard url.startAccessingSecurityScopedResource() else { continue }
+                    defer { url.stopAccessingSecurityScopedResource() }
                     
                     guard let enumerator = FileManager.default.enumerator(
                         at: url,
@@ -480,23 +481,31 @@ struct ImportLocalFolderModifier: ViewModifier {
                     }
                     
                     var urls: [URL] = []
-                    for case let url as URL in enumerator.allObjects {
-                        urls.append(url)
-                    }
-                    
-                    // Check the folder is too large (too many subfolders)
                     var count = 0
-                    for url in urls {
-                        let isHidden = (try? url.resourceValues(forKeys: [.isHiddenKey]).isHidden) ?? false
-                        let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
-                        if !isHidden && isDirectory {
+                    while let itemURL = enumerator.nextObject() as? URL {
+                        let resourceValues = try? itemURL.resourceValues(forKeys: [.isDirectoryKey, .isHiddenKey])
+                        let isHidden = resourceValues?.isHidden ?? false
+                        let isDirectory = resourceValues?.isDirectory ?? false
+                        
+                        if isHidden {
+                            if isDirectory {
+                                enumerator.skipDescendants()
+                            }
+                            continue
+                        }
+                        
+                        urls.append(itemURL)
+                        if isDirectory {
                             count += 1
                         }
                     }
                     
                     if count > 1000 {
                         await MainActor.run {
-                            alert(title: .localizable(.sidebarLocalFolderTooLargeAlertTitle), error: FolderTooLargeError())
+                            alert(
+                                title: .init(localizable: .sidebarLocalFolderTooLargeAlertTitle),
+                                error: FolderTooLargeError()
+                            )
                         }
                         return
                     }
@@ -517,8 +526,6 @@ struct ImportLocalFolderModifier: ViewModifier {
                         }
                         try context.save()
                     }
-                    
-                    url.stopAccessingSecurityScopedResource()
                 }
             } catch {
                 print("import failed:", error)

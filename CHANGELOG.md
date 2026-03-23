@@ -1,3 +1,18 @@
+## 1.7.3
+
+#### Optimizations
+- Optimized local folder import enumeration and security-scoped resource handling.
+- Added support for Excalidraw cardinality arrowheads.
+
+#### Bug fixed
+
+- Fixed hidden files and hidden directories being imported when importing local folders.
+- Fixed import failures from the menu bar not presenting a clear error to the user.
+- Fixed automatic update preference not persisting correctly across app launches.
+- Improved decoding compatibility for Excalidraw linear elements with missing fields.
+
+### 
+
 ## 1.7.2
 
 #### Bug fixed

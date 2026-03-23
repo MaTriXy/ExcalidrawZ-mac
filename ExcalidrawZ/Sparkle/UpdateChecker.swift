@@ -11,10 +11,11 @@ import Sparkle
 
 final class UpdateChecker: ObservableObject {
     var updater: SPUUpdater? = nil
-    @Published var canCheckForUpdates = false {
+    @Published private(set) var canCheckForUpdates = false
+    @Published var automaticallyChecksForUpdates = false {
         didSet {
-            if canCheckForUpdates != updater?.automaticallyChecksForUpdates {
-                updater?.automaticallyChecksForUpdates = canCheckForUpdates
+            if automaticallyChecksForUpdates != updater?.automaticallyChecksForUpdates {
+                updater?.automaticallyChecksForUpdates = automaticallyChecksForUpdates
             }
         }
     }
@@ -25,7 +26,9 @@ final class UpdateChecker: ObservableObject {
         self.updater = updater
         updater.publisher(for: \.canCheckForUpdates)
             .assign(to: &$canCheckForUpdates)
-        
+
+        updater.publisher(for: \.automaticallyChecksForUpdates)
+            .assign(to: &$automaticallyChecksForUpdates)
     }
 }
 #endif
