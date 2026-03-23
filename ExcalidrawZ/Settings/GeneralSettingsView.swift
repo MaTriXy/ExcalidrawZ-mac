@@ -220,7 +220,8 @@ struct GeneralSettingsView: View {
         
 #if os(macOS) && !APP_STORE
         Section {
-            Toggle(.localizable(.settingsUpdatesAutoCheckLabel), isOn: $updateChecker.canCheckForUpdates)
+            Toggle(.localizable(.settingsUpdatesAutoCheckLabel), isOn: $updateChecker.automaticallyChecksForUpdates)
+                .disabled(!updateChecker.canCheckForUpdates)
         } header: {
             if #available(macOS 14.0, *) {
                 Text(.localizable(.settingsUpdateHeadline))
