@@ -133,14 +133,13 @@ struct ExcalidrawFile: Codable, Hashable, Identifiable, Sendable {
     
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.source = try container.decode(String.self, forKey: .source)
+        self.source = try container.decodeIfPresent(String.self, forKey: .source) ?? "https://excalidraw.com"
         // maybe empty if from core data
         self.files = try container.decodeIfPresent([String : ExcalidrawFile.ResourceFile].self, forKey: .files) ?? [:]
-        self.version = try container.decode(Int.self, forKey: .version)
+        self.version = try container.decodeIfPresent(Int.self, forKey: .version) ?? 2
         self.elements = try container.decodeIfPresent([ExcalidrawElement].self, forKey: .elements) ?? []
-        self.appState = try container.decode(ExcalidrawFile.AppState.self, forKey: .appState)
+        self.appState = try container.decodeIfPresent(ExcalidrawFile.AppState.self, forKey: .appState) ?? .init()
         self.type = try container.decode(String.self, forKey: .type)
-        // self.roomID = try container.decodeIfPresent(String.self, forKey: .roomID)
     }
     
     func encode(to encoder: any Encoder) throws {
