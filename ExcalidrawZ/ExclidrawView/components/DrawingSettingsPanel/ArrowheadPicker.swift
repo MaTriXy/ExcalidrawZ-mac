@@ -52,11 +52,29 @@ func arrowheadIcon(_ arrowhead: Nullable<Arrowhead>?) -> some View {
                 case .crowfootOne:
                     ArrowheadCowsFootOne()
                         .stroke(.primary, lineWidth: lineWidth)
+                case .cardinalityOne:
+                    ArrowheadCowsFootOne()
+                        .stroke(.primary, lineWidth: lineWidth)
                 case .crowfootMany:
+                    ArrowheadCowsFootMany()
+                        .stroke(.primary, lineWidth: lineWidth)
+                case .cardinalityMany:
                     ArrowheadCowsFootMany()
                         .stroke(.primary, lineWidth: lineWidth)
                 case .crowfootOneOrMany:
                     ArrowheadCowsFootOneOrMany()
+                        .stroke(.primary, lineWidth: lineWidth)
+                case .cardinalityOneOrMany:
+                    ArrowheadCowsFootOneOrMany()
+                        .stroke(.primary, lineWidth: lineWidth)
+                case .cardinalityExactlyOne:
+                    ArrowheadCardinalityExactlyOne()
+                        .stroke(.primary, lineWidth: lineWidth)
+                case .cardinalityZeroOrOne:
+                    ArrowheadCardinalityZeroOrOne()
+                        .stroke(.primary, lineWidth: lineWidth)
+                case .cardinalityZeroOrMany:
+                    ArrowheadCardinalityZeroOrMany()
                         .stroke(.primary, lineWidth: lineWidth)
             }
         } else if let nullable = arrowhead, nullable.isNull {
@@ -124,9 +142,12 @@ struct ArrowheadPicker: View {
         .value(.circleOutline),
         .value(.triangleOutline),
         .value(.diamondOutline),
-        .value(.crowfootOne),
-        .value(.crowfootMany),
-        .value(.crowfootOneOrMany)
+        .value(.cardinalityOne),
+        .value(.cardinalityMany),
+        .value(.cardinalityOneOrMany),
+        .value(.cardinalityExactlyOne),
+        .value(.cardinalityZeroOrOne),
+        .value(.cardinalityZeroOrMany)
     ]
 
     @State private var showFullPicker = false
