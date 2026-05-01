@@ -12,46 +12,28 @@ import ChocofordUI
 struct ExcalidrawTrailingControls: View {
     @Environment(\.containerHorizontalSizeClass) private var containerHorizontalSizeClass
 
-    @EnvironmentObject private var appPreference: AppPreference
     @EnvironmentObject private var layoutState: LayoutState
     @EnvironmentObject private var fileState: FileState
 
-    private var shouldShowFileHistoryButton: Bool {
-        fileState.currentActiveFile != nil
-    }
-
-    private var shouldShowInspectorButton: Bool {
-        if #available(macOS 13.0, iOS 16.0, *),
-           appPreference.inspectorLayout == .sidebar {
-            return false
-        }
-
-        return true
-    }
-
     var body: some View {
-        if containerHorizontalSizeClass != .compact,
-           shouldShowFileHistoryButton || shouldShowInspectorButton {
+        if containerHorizontalSizeClass != .compact {
             VStack(alignment: .trailing, spacing: 10) {
-                if shouldShowFileHistoryButton {
-                    FileHistoryButton()
-                        .labelStyle(.iconOnly)
-                        .modernButtonStyle(style: .glass, shape: .circle)
+                Button {
+                    layoutState.isInspectorPresented.toggle()
+                } label: {
+                    Label(.localizable(.librariesTitle), systemSymbol: .book)
                 }
-
-                if shouldShowInspectorButton {
-                    Button {
-                        layoutState.isInspectorPresented.toggle()
-                    } label: {
-                        Label(.localizable(.librariesTitle), systemSymbol: .sidebarRight)
-                    }
+                .labelStyle(.iconOnly)
+                .modernButtonStyle(style: .glass, size: .extraLarge, shape: .circle)
+                .help(.localizable(.librariesTitle))
+                .keyboardShortcut("0", modifiers: [.command, .option])
+                
+                FileHistoryButton()
                     .labelStyle(.iconOnly)
-                    .modernButtonStyle(style: .glass, shape: .circle)
-                    .help(.localizable(.librariesTitle))
-                }
+                    .modernButtonStyle(style: .glass, size: .extraLarge, shape: .circle)
             }
             .padding(.top, 16)
-            .padding(.trailing, 16)
+            .padding(.trailing, 8)
         }
     }
 }

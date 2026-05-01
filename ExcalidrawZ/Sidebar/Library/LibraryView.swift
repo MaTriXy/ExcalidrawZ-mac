@@ -71,24 +71,12 @@ struct LibraryTrailingSidebarModifier: ViewModifier {
                 Spacer()
                 if layoutState.isInspectorPresented {
                     VStack {
-                        HStack {
-                            Spacer()
-                            Button {
-                                layoutState.isInspectorPresented.toggle()
-                            } label: {
-                                Label(.localizable(.librariesTitle), systemSymbol: .sidebarRight)
-                            }
-                            .labelStyle(.iconOnly)
-                            .modernButtonStyle(style: .glass, shape: .circle)
-                        }
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, 4)
-                        .overlay {
-                            Text(.localizable(.librariesTitle))
-                                .foregroundStyle(.secondary)
-                        }
-                        
-                        
+                        Text(.localizable(.librariesTitle))
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 4)
+
                         LibraryView(librariesToImport: $librariesToImport)
                     }
                     .frame(minWidth: 240, idealWidth: 250, maxWidth: 300)
@@ -120,6 +108,13 @@ struct LibraryTrailingSidebarModifier: ViewModifier {
             .padding(.horizontal, 10)
             .ignoresSafeArea(edges: .bottom)
         }
+        .overlay(alignment: .topTrailing) {
+            if layoutState.isInspectorPresented {
+                ExcalidrawTrailingControls()
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeOut, value: layoutState.isInspectorPresented)
     }
     
 }
@@ -232,14 +227,6 @@ struct LibraryView: View {
                         .frame(width: 1)
                 }
             }
-        }
-        ToolbarItem(placement: .confirmationAction) {
-            Button {
-                layoutState.isInspectorPresented.toggle()
-            } label: {
-                Label(.localizable(.librariesTitle), systemSymbol: .sidebarRight)
-            }
-            .keyboardShortcut("0", modifiers: [.command, .option])
         }
     }
 #endif
