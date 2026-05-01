@@ -1,5 +1,5 @@
 //
-//  ExcalidrawCollaborationView.swift
+//  CollaborationEditor.swift
 //  ExcalidrawZ
 //
 //  Created by Dove Zachary on 3/17/25.
@@ -9,7 +9,7 @@ import SwiftUI
 
 import ChocofordUI
 
-struct ExcalidrawCollaborationView: View {
+struct CollaborationEditor: View {
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.alertToast) var alertToast
     @EnvironmentObject var appPreference: AppPreference
@@ -31,7 +31,7 @@ struct ExcalidrawCollaborationView: View {
         }
     }
     
-    @State private var loadingState: ExcalidrawView.LoadingState = .idle
+    @State private var loadingState: ExcalidrawCanvasView.LoadingState = .idle
     @State private var isProgressViewPresented = true
 
     @State private var excalidrawFile: ExcalidrawFile?
@@ -39,7 +39,7 @@ struct ExcalidrawCollaborationView: View {
     var body: some View {
         ZStack {
             if excalidrawFile != nil {
-                ExcalidrawView(
+                ExcalidrawCanvasView(
                     type: .collaboration,
                     file: $excalidrawFile,
                     loadingState: $loadingState,

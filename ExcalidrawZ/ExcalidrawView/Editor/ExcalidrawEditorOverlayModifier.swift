@@ -1,66 +1,43 @@
 //
-//  ExcalidrawView.swift
+//  ExcalidrawEditorOverlayModifier.swift
 //  ExcalidrawZ
 //
 //  Created by Dove Zachary on 2022/12/27.
 //
 
 import SwiftUI
-import CoreData
-import UniformTypeIdentifiers
-import Combine
 
 import ChocofordUI
 
-struct ExcalidrawContainerView: View {
-    @Environment(\.colorScheme) var colorScheme
+/// Layers loading / empty / recover overlays on top of an `ExcalidrawCanvasView`.
+struct ExcalidrawEditorOverlayModifier: ViewModifier {
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.alertToast) var alertToast
     @Environment(\.containerHorizontalSizeClass) var containerHorizontalSizeClass
 
-    @EnvironmentObject var appPreference: AppPreference
     @EnvironmentObject var layoutState: LayoutState
     @EnvironmentObject private var fileState: FileState
 
-    @Binding var file: ExcalidrawFile?
-    var interactionEnabled: Bool
+    @Binding var loadingState: ExcalidrawCanvasView.LoadingState
+    var hasFile: Bool
 
-    init(
-        file: Binding<ExcalidrawFile?>,
-        interactionEnabled: Bool = true
-    ) {
-        self._file = file
-        self.interactionEnabled = interactionEnabled
-    }
-
-    @State private var loadingState = ExcalidrawView.LoadingState.loading
     @State private var isProgressViewPresented = true
-
-    @State private var isDropping: Bool = false
-
     @State private var isSelectFilePlaceholderPresented = false
-    
-    var body: some View {
+
+    func body(content: Content) -> some View {
         ZStack(alignment: .center) {
-            ExcalidrawView(
-                file: $file,
-                loadingState: $loadingState,
-                interactionEnabled: interactionEnabled,
-            ) { error in
-                alertToast(error)
-            }
-            .preferredColorScheme(appPreference.excalidrawAppearance.colorScheme)
-            .opacity(isProgressViewPresented ? 0 : 1)
-            .opacity(file == nil ? 0 : 1)
-            .onChange(of: loadingState, debounce: 1) { newVal in
-                isProgressViewPresented = newVal == .loading
-            }
-            
+            content
+                .opacity(isProgressViewPresented ? 0 : 1)
+                .opacity(hasFile ? 1 : 0)
+                .onChange(of: loadingState, debounce: 1) { newVal in
+                    isProgressViewPresented = newVal == .loading
+                }
+
             if containerHorizontalSizeClass != .compact {
                 selectFilePlaceholderView()
             }
-            
-            if file == nil {
+
+            if !hasFile {
                 emptyFilePlaceholderview()
             }
 
@@ -78,7 +55,7 @@ struct ExcalidrawContainerView: View {
         .transition(.opacity)
         .animation(.default, value: isProgressViewPresented)
     }
-    
+
     @MainActor @ViewBuilder
     private var recoverOverlayView: some View {
         Rectangle()
@@ -96,7 +73,7 @@ struct ExcalidrawContainerView: View {
                 } label: {
                     Text(.localizable(.deletedFileRecoverAlertButtonCancel))
                 }
-                
+
                 Button(role: {
                     if #available(iOS 26.0, macOS 26.0, *) {
                         return .confirm
@@ -104,11 +81,9 @@ struct ExcalidrawContainerView: View {
                         return .none
                     }
                 }()) {
-                    // Recover file
                     if case .file(let currentFile) = fileState.currentActiveFile {
                         Task {
                             let context = viewContext
-                            // PersistenceController.shared.container.newBackgroundContext()
                             do {
                                 try await fileState
                                     .recoverFile(fileID: currentFile.objectID, context: context)
@@ -125,7 +100,7 @@ struct ExcalidrawContainerView: View {
                 Text(.localizable(.deletedFileRecoverAlertMessage))
             }
     }
-    
+
     @MainActor @ViewBuilder
     private func selectFilePlaceholderView() -> some View {
         ZStack {
@@ -144,7 +119,7 @@ struct ExcalidrawContainerView: View {
             isSelectFilePlaceholderPresented = newValue
         }
     }
-    
+
     @MainActor @ViewBuilder
     private func emptyFilePlaceholderview() -> some View {
         ZStack {
@@ -157,7 +132,7 @@ struct ExcalidrawContainerView: View {
                         Rectangle()
                             .fill(Color.windowBackgroundColor)
                     }
-                    
+
                     Text(.localizable(.excalidrawWebViewPlaceholderSelectFile))
                         .font(.title)
                         .foregroundStyle(.secondary)
@@ -175,5 +150,18 @@ struct ExcalidrawContainerView: View {
             isSelectFilePlaceholderPresented = newValue
         }
         .contentShape(Rectangle())
+    }
+}
+
+extension View {
+    /// Adds the editor's loading / empty / recover overlays around an `ExcalidrawCanvasView`.
+    func excalidrawEditorOverlays(
+        loadingState: Binding<ExcalidrawCanvasView.LoadingState>,
+        hasFile: Bool
+    ) -> some View {
+        modifier(ExcalidrawEditorOverlayModifier(
+            loadingState: loadingState,
+            hasFile: hasFile
+        ))
     }
 }

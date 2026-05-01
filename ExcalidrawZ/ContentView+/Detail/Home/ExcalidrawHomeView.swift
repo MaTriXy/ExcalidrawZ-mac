@@ -52,7 +52,7 @@ struct ExcalidrawHomeView: View {
 //                .ignoresSafeArea()
 //                .opacity(disableInteration || !fileHomeItemTransitionState.canShowExcalidrawCanvas ? 0 : 1)
 
-            ExcalidrawContainerWrapper(
+            ExcalidrawEditor(
                 activeFile: $fileState.currentActiveFile,
                 interactionEnabled: !disableInteration
             )

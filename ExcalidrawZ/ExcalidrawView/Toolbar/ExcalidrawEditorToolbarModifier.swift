@@ -1,5 +1,5 @@
 //
-//  ContainerToolbar.swift
+//  ExcalidrawEditorToolbarModifier.swift
 //  ExcalidrawZ
 //
 //  Created by Dove Zachary on 2024/11/18.
@@ -9,7 +9,7 @@ import SwiftUI
 
 import ChocofordUI
 
-struct ExcalidrawContainerToolbarContentModifier: ViewModifier {
+struct ExcalidrawEditorToolbarModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.containerHorizontalSizeClass) private var containerHorizontalSizeClass
@@ -141,43 +141,8 @@ struct ExcalidrawContainerToolbarContentModifier: ViewModifier {
 #if os(iOS)
                 applePencilToggle()
 #endif
-                FileHistoryButton()
-                
                 ShareToolbarButton()
             }
-#if os(iOS)
-            if #available(iOS 26.0, *) {
-                if containerHorizontalSizeClass == .compact,
-                   fileState.currentActiveFile == nil {
-                    
-                } else if !layoutState.isInspectorPresented {
-                    inspectorButton()
-                }
-            } else if appPreference.inspectorLayout == .sidebar {
-                if !layoutState.isInspectorPresented {
-                    inspectorButton()
-                }
-            }
-#endif
-            if #available(macOS 13.0, iOS 16.0, *),
-                appPreference.inspectorLayout == .sidebar {
-
-            } else {
-                Button {
-                    layoutState.isInspectorPresented.toggle()
-                } label: {
-                    Label(.localizable(.librariesTitle), systemSymbol: .sidebarRight)
-                }
-            }
-        }
-    }
-    
-    @MainActor @ViewBuilder
-    private func inspectorButton() -> some View {
-        Button {
-            layoutState.isInspectorPresented.toggle()
-        } label: {
-            Label(.localizable(.librariesTitle), systemSymbol: .sidebarRight)
         }
     }
     

@@ -909,7 +909,7 @@ extension Notification.Name {
 }
 
 extension ExcalidrawFile {
-    mutating func update(data: ExcalidrawView.Coordinator.ExcalidrawFileData) throws {
+    mutating func update(data: ExcalidrawCanvasView.Coordinator.ExcalidrawFileData) throws {
         guard let content = self.content else {
             struct EmptyContentError: LocalizedError {
                 var errorDescription: String? { "Invalid excalidraw file." }

@@ -1,5 +1,5 @@
 //
-//  ExcalidrawCollabContainerView.swift
+//  CollaborationEditorStack.swift
 //  ExcalidrawZ
 //
 //  Created by Dove Zachary on 3/13/25.
@@ -12,7 +12,7 @@ extension Notification.Name {
     static let onJoinCollaborationRoom = Notification.Name("OnJoinCollaborationRoom")
 }
 
-struct ExcalidrawCollabContainerView: View {
+struct CollaborationEditorStack: View {
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.alertToast) var alertToast
     @Environment(\.containerHorizontalSizeClass) var containerHorizontalSizeClass
@@ -57,7 +57,7 @@ struct ExcalidrawCollabContainerView: View {
                         }
                     }
                     
-                    ExcalidrawCollaborationView(file: file)
+                    CollaborationEditor(file: file)
                         .zIndex(zIndex)
                 }
             }
@@ -68,7 +68,7 @@ struct ExcalidrawCollabContainerView: View {
 
 
 #Preview {
-    ExcalidrawCollabContainerView()
+    CollaborationEditorStack()
         .environmentObject(AppPreference())
         .environmentObject(LayoutState())
         .environmentObject(FileState())

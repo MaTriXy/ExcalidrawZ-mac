@@ -1,5 +1,5 @@
 //
-//  ExcalidrawContainerWrapper.swift
+//  ExcalidrawEditor.swift
 //  ExcalidrawZ
 //
 //  Created by Chocoford on 9/23/25.
@@ -11,15 +11,16 @@ import CoreData
 
 import Logging
 
-struct ExcalidrawContainerWrapper: View {
+struct ExcalidrawEditor: View {
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.alertToast) var alertToast
 
+    @EnvironmentObject var appPreference: AppPreference
     @EnvironmentObject var fileState: FileState
     @EnvironmentObject var localFolderState: LocalFolderState
     @EnvironmentObject var toolState: ToolState
 
-    let logger = Logger(label: "ExcalidrawContainerWrapper")
+    let logger = Logger(label: "ExcalidrawEditor")
     
     @Binding var activeFile: FileState.ActiveFile?
     var interactionEnabled: Bool
@@ -129,21 +130,31 @@ struct ExcalidrawContainerWrapper: View {
     }
     
     
+    @State private var canvasLoadingState: ExcalidrawCanvasView.LoadingState = .loading
+
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topTrailing) {
             ZStack {
-                ExcalidrawContainerView(
+                ExcalidrawCanvasView(
                     file: Binding {
                         localFileBinding.wrappedValue
                     } set: { val in
                         applyExcalidrawFile(val)
                     },
+                    loadingState: $canvasLoadingState,
                     interactionEnabled: interactionEnabled
+                ) { error in
+                    alertToast(error)
+                }
+                .preferredColorScheme(appPreference.excalidrawAppearance.colorScheme)
+                .excalidrawEditorOverlays(
+                    loadingState: $canvasLoadingState,
+                    hasFile: localFileBinding.wrappedValue != nil
                 )
                 .opacity(isInCollaborationSpace ? 0 : 1)
                 .allowsHitTesting(!isInCollaborationSpace && !isLoadingFile)
 
-                ExcalidrawCollabContainerView()
+                CollaborationEditorStack()
                     .opacity(isInCollaborationSpace ? 1 : 0)
                     .allowsHitTesting(isInCollaborationSpace && !isLoadingFile)
             }
@@ -165,6 +176,10 @@ struct ExcalidrawContainerWrapper: View {
                 }
                 .transition(.opacity)
             }
+
+            ExcalidrawTrailingControls()
+                .opacity(isLoadingFile ? 0 : 1)
+                .allowsHitTesting(!isLoadingFile)
         }
         .allowsHitTesting(interactionEnabled)
         .observeExcalidrawFileStatus(

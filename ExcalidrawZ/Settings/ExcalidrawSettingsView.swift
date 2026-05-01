@@ -40,7 +40,7 @@ struct ExcalidrawSettingsView: View {
 
     private func saveSettings() {
         appPreference.customDrawingSettings = editingSettings
-        // Notify ExcalidrawView to apply settings immediately
+        // Notify ExcalidrawCanvasView to apply settings immediately
         NotificationCenter.default.post(.applyUserDrawingSettings())
     }
     

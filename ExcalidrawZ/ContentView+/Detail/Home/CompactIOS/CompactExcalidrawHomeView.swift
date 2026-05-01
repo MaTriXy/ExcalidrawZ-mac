@@ -26,13 +26,13 @@ struct CompactExcalidrawHomeView: View {
     var body: some View {
         ZStack {
             NavigationStack {
-                ExcalidrawContainerWrapper(
+                ExcalidrawEditor(
                     activeFile: $fileState.currentActiveFile,
                     interactionEnabled: !disableInteration
                 )
                 .ignoresSafeArea()
                 .opacity(disableInteration || !fileHomeItemTransitionState.canShowExcalidrawCanvas ? 0 : 1)
-                .modifier(ExcalidrawContainerToolbarContentModifier())
+                .modifier(ExcalidrawEditorToolbarModifier())
 #if os(iOS)
                 .modifier(ApplePencilToolbarModifier())
 #endif

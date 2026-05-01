@@ -53,7 +53,7 @@ class ExcalidrawCore: NSObject, ObservableObject {
     
     let logger = Logger(label: "ExcalidrawCore")
     
-    var parent: ExcalidrawView?
+    var parent: ExcalidrawCanvasView?
     lazy var errorStream: AsyncStream<Error> = {
         AsyncStream { continuation in
             publishError = {
@@ -97,7 +97,7 @@ class ExcalidrawCore: NSObject, ObservableObject {
     internal var lastTool: ExcalidrawTool?
     
     @MainActor
-    func setup(parent: ExcalidrawView) {
+    func setup(parent: ExcalidrawCanvasView) {
         self.parent = parent
         switch parent.type {
             case .normal:

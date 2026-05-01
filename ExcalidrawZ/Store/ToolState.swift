@@ -38,7 +38,7 @@ enum ExcalidrawTool: Int, Hashable, CaseIterable {
     
     
     init?(
-        from tool: ExcalidrawView.Coordinator.SetActiveToolMessage.SetActiveToolMessageData.Tool
+        from tool: ExcalidrawCanvasView.Coordinator.SetActiveToolMessage.SetActiveToolMessageData.Tool
     ) {
         switch tool {
             case .selection:
@@ -278,7 +278,7 @@ enum ExcalidrawTool: Int, Hashable, CaseIterable {
 
 final class ToolState: ObservableObject {
     let logger = Logger(label: "ToolState")
-    var excalidrawWebCoordinator: ExcalidrawView.Coordinator?
+    var excalidrawWebCoordinator: ExcalidrawCanvasView.Coordinator?
 
     @Published var activatedTool: ExcalidrawTool? = .cursor
     @Published var isToolLocked: Bool = false
