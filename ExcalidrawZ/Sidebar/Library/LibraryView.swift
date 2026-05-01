@@ -72,6 +72,8 @@ struct InspectorPresentationModifier: ViewModifier {
                 FileHistoryInspectorContent()
             case .preference:
                 CanvasSettingsInspectorContent()
+            case .search:
+                SearchInspectorContent()
         }
     }
 
@@ -83,6 +85,8 @@ struct InspectorPresentationModifier: ViewModifier {
                 String(localizable: .checkpoints)
             case .preference:
                 "Preference"
+            case .search:
+                "Search"
         }
     }
 

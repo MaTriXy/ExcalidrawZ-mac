@@ -70,27 +70,28 @@ struct FileCheckpointRowView<Checkpoint: FileCheckpointRepresentable>: View {
                     .font(.headline)
                 Spacer()
             }
-            
-            HStack(spacing: 0) {
-                if let file {
-                    if #available(macOS 13.0, iOS 16.0, *) {
-                        Text(.localizable(.checkpointsElementsDescription(file.elements.count)))
-                    } else {
-                        Text(file.elements.count.formatted())
+        
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 0) {
+                    if let file {
+                        if #available(macOS 13.0, iOS 16.0, *) {
+                            Text(.localizable(.checkpointsElementsDescription(file.elements.count)))
+                        } else {
+                            Text(file.elements.count.formatted())
+                        }
                     }
+                    Text(" · ")
+                    
+                    Text("\(fileSize.formatted(.byteCount(style: .file)))")
+                    
                 }
-                Text(" · ")
-                
-                Text("\(fileSize.formatted(.byteCount(style: .file)))")
-                
-            }
-            .font(.footnote)
-            .foregroundStyle(.secondary)
-            
-            Text(checkpoint.updatedAt?.formatted() ?? "")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-            
+                
+                Text(checkpoint.updatedAt?.formatted() ?? "")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
         }
         .lineLimit(1)
         .padding(.horizontal, 4)

@@ -31,7 +31,13 @@ struct ExcalidrawTrailingControls: View {
                     icon: .sliderHorizontal3,
                     title: "Preference"
                 )
-                
+
+                InspectorTabButton(
+                    tab: .search,
+                    icon: .magnifyingglass,
+                    title: "Search"
+                )
+
                 InspectorTabButton(
                     tab: .library,
                     icon: .book,
