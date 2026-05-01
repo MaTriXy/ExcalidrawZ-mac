@@ -8,6 +8,7 @@
 import SwiftUI
 
 import ChocofordUI
+import SFSafeSymbols
 
 struct ExcalidrawTrailingControls: View {
     @Environment(\.containerHorizontalSizeClass) private var containerHorizontalSizeClass
@@ -15,25 +16,65 @@ struct ExcalidrawTrailingControls: View {
     @EnvironmentObject private var layoutState: LayoutState
     @EnvironmentObject private var fileState: FileState
 
+    private var historyDisabled: Bool {
+        if case .group(let group) = fileState.currentActiveGroup, group.groupType == .trash {
+            return true
+        }
+        return fileState.currentActiveFile == nil
+    }
+
     var body: some View {
         if containerHorizontalSizeClass != .compact {
             VStack(alignment: .trailing, spacing: 10) {
-                Button {
-                    layoutState.isInspectorPresented.toggle()
-                } label: {
-                    Label(.localizable(.librariesTitle), systemSymbol: .book)
-                }
-                .labelStyle(.iconOnly)
-                .modernButtonStyle(style: .glass, size: .extraLarge, shape: .circle)
-                .help(.localizable(.librariesTitle))
-                .keyboardShortcut("0", modifiers: [.command, .option])
+                InspectorTabButton(
+                    tab: .canvasSettings,
+                    icon: .sliderHorizontal3,
+                    title: "Canvas"
+                )
                 
-                FileHistoryButton()
-                    .labelStyle(.iconOnly)
-                    .modernButtonStyle(style: .glass, size: .extraLarge, shape: .circle)
+                InspectorTabButton(
+                    tab: .library,
+                    icon: .book,
+                    title: String(localizable: .librariesTitle)
+                )
+
+                InspectorTabButton(
+                    tab: .history,
+                    icon: .clockArrowCirclepath,
+                    title: String(localizable: .checkpoints)
+                )
+                .disabled(historyDisabled)
+
             }
             .padding(.top, 16)
             .padding(.trailing, 8)
         }
+    }
+}
+
+private struct InspectorTabButton: View {
+    @EnvironmentObject private var layoutState: LayoutState
+
+    let tab: LayoutState.InspectorTab
+    let icon: SFSymbol
+    let title: String
+
+    private var isActive: Bool {
+        layoutState.isInspectorPresented && layoutState.activeInspectorTab == tab
+    }
+
+    var body: some View {
+        Button {
+            layoutState.toggleInspector(tab)
+        } label: {
+            Label(title, systemSymbol: icon)
+        }
+        .labelStyle(.iconOnly)
+        .modernButtonStyle(
+            style: isActive ? .glassProminent : .glass,
+            size: .extraLarge,
+            shape: .circle
+        )
+        .help(title)
     }
 }

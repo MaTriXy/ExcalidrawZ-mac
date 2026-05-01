@@ -13,14 +13,14 @@ import ChocofordEssentials
 import ChocofordUI
 import UniformTypeIdentifiers
 
-struct LibraryTrailingSidebarModifier: ViewModifier {
+struct InspectorPresentationModifier: ViewModifier {
     @Environment(\.containerHorizontalSizeClass) private var containerHorizontalSizeClass
-    
+
     @EnvironmentObject private var appPreference: AppPreference
     @EnvironmentObject private var layoutState: LayoutState
-    
+
     @State private var librariesToImport: [ExcalidrawLibrary] = []
-    
+
     var shouldUseFloatingInspector: Bool {
         if appPreference.inspectorLayout == .floatingBar {
             return true
@@ -39,7 +39,7 @@ struct LibraryTrailingSidebarModifier: ViewModifier {
             return false
         }
     }
-    
+
     func body(content: Content) -> some View {
         ZStack {
             if shouldUseFloatingInspector {
@@ -47,12 +47,12 @@ struct LibraryTrailingSidebarModifier: ViewModifier {
             } else if containerHorizontalSizeClass == .compact {
                 content
                     .sheet(isPresented: $layoutState.isInspectorPresented) {
-                        LibraryView(librariesToImport: $librariesToImport)
+                        inspectorContent()
                     }
             } else if #available(macOS 14.0, iOS 17.0, *) {
                 content
                     .inspector(isPresented: $layoutState.isInspectorPresented) {
-                        LibraryView(librariesToImport: $librariesToImport)
+                        inspectorContent()
                             .inspectorColumnWidth(min: 240, ideal: 250, max: 300)
                     }
             } else {
@@ -61,8 +61,31 @@ struct LibraryTrailingSidebarModifier: ViewModifier {
         }
         .modifier(ExcalidrawLibraryImporter(items: $librariesToImport))
     }
-    
-    
+
+    /// Picks the view shown inside the inspector based on the active tab.
+    @MainActor @ViewBuilder
+    private func inspectorContent() -> some View {
+        switch layoutState.activeInspectorTab {
+            case .library:
+                LibraryView(librariesToImport: $librariesToImport)
+            case .history:
+                FileHistoryInspectorContent()
+            case .canvasSettings:
+                CanvasSettingsInspectorContent()
+        }
+    }
+
+    private var inspectorTitle: String {
+        switch layoutState.activeInspectorTab {
+            case .library:
+                String(localizable: .librariesTitle)
+            case .history:
+                String(localizable: .checkpoints)
+            case .canvasSettings:
+                "Canvas"
+        }
+    }
+
     @MainActor @ViewBuilder
     private func floatingInspector(content: Content) -> some View {
         ZStack {
@@ -71,13 +94,13 @@ struct LibraryTrailingSidebarModifier: ViewModifier {
                 Spacer()
                 if layoutState.isInspectorPresented {
                     VStack {
-                        Text(.localizable(.librariesTitle))
+                        Text(inspectorTitle)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .padding(.horizontal, 4)
 
-                        LibraryView(librariesToImport: $librariesToImport)
+                        inspectorContent()
                     }
                     .frame(minWidth: 240, idealWidth: 250, maxWidth: 300)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -116,8 +139,52 @@ struct LibraryTrailingSidebarModifier: ViewModifier {
         }
         .animation(.easeOut, value: layoutState.isInspectorPresented)
     }
-    
 }
+
+#if os(macOS)
+/// Renders the title that appears at the top of the inspector chrome in sidebar mode.
+/// The placement gymnastics are needed to push the toggle to the right and center the title across macOS versions.
+struct InspectorHeaderToolbar: ToolbarContent {
+    let title: String
+    let isInspectorPresented: Bool
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .destructiveAction) {
+            if #available(macOS 26.0, *) {} else {
+                Color.clear
+            }
+        }
+
+        /// This is the key to make sidebar toggle at the right side.
+        /// The `status` is work well in macOS 15.0+. But not well in macOS 14.0
+        ToolbarItemGroup(placement: {
+            if #available(macOS 15.0, iOS 18.0, *) {
+                .status
+            } else {
+                .cancellationAction
+            }
+        }()) {
+            if isInspectorPresented {
+                if #available(macOS 15.0, iOS 18.0, *) {} else {
+                    Spacer()
+                }
+                Text(title)
+                    .foregroundStyle(.secondary)
+                    .font(.headline)
+                    .padding(.horizontal, 8)
+                if #available(macOS 15.0, iOS 18.0, *) {} else {
+                    Spacer()
+                }
+            } else {
+                if #available(macOS 26.0, *) {} else {
+                    Color.clear
+                        .frame(width: 1)
+                }
+            }
+        }
+    }
+}
+#endif
 
 struct LibraryView: View {
     @Environment(\.containerHorizontalSizeClass) private var containerHorizontalSizeClass
@@ -195,39 +262,10 @@ struct LibraryView: View {
 #if os(macOS)
     @MainActor @ToolbarContentBuilder
     private func toolbar() -> some ToolbarContent {
-        ToolbarItem(placement: .destructiveAction) {
-            if #available(macOS 26.0, *) {} else {
-                Color.clear
-            }
-        }
-        
-        /// This is the key to make sidebar toggle at the right side.
-        /// The `status` is work well in macOS 15.0+. But not well in macOS 14.0
-        ToolbarItemGroup(placement: {
-            if #available(macOS 15.0, iOS 18.0, *) {
-                .status
-            } else {
-                .cancellationAction
-            }
-        }()) {
-            if layoutState.isInspectorPresented {
-                if #available(macOS 15.0, iOS 18.0, *) {} else {
-                    Spacer()
-                }
-                Text(.localizable(.librariesTitle))
-                    .foregroundStyle(.secondary)
-                    .font(.headline)
-                    .padding(.horizontal, 8)
-                if #available(macOS 15.0, iOS 18.0, *) {} else {
-                    Spacer()
-                }
-            } else {
-                if #available(macOS 26.0, *) {} else {
-                    Color.clear
-                        .frame(width: 1)
-                }
-            }
-        }
+        InspectorHeaderToolbar(
+            title: String(localizable: .librariesTitle),
+            isInspectorPresented: layoutState.isInspectorPresented
+        )
     }
 #endif
 

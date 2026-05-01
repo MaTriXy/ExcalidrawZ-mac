@@ -9,80 +9,44 @@ import SwiftUI
 import ChocofordUI
 import ChocofordEssentials
 
-struct FileHistoryButton: View {
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+/// Inspector content that lists checkpoints for the currently active file.
+/// Picks the right `FileCheckpointListView` overload based on the file type.
+struct FileHistoryInspectorContent: View {
     @EnvironmentObject var fileState: FileState
-    
-    @State private var isPresented = false
-    
-    private var disabled: Bool {
-        {
-            if case .group(let group) = fileState.currentActiveGroup {
-                return group.groupType == .trash
-            }
-            return false
-        }() ||
-        fileState.currentActiveFile == nil
+    @EnvironmentObject var layoutState: LayoutState
+    @EnvironmentObject var appPreference: AppPreference
+
+    @ViewBuilder
+    private func contentView() -> some View {
+        switch fileState.currentActiveFile {
+            case .file(let file):
+                FileCheckpointListView(file: file)
+            case .localFile(let url):
+                FileCheckpointListView(localFile: url)
+            case .temporaryFile(let url):
+                FileCheckpointListView(localFile: url)
+            case .collaborationFile(let collaborationFile):
+                FileCheckpointListView(file: collaborationFile)
+            default:
+                EmptyView()
+        }
     }
 
     var body: some View {
-        Button {
-            isPresented.toggle()
-        } label: {
-            Label(.localizable(.checkpoints), systemSymbol: .clockArrowCirclepath)
-        }
-        .disabled(disabled)
-        .help(.localizable(.checkpoints))
 #if os(macOS)
-        .popover(isPresented: $isPresented, arrowEdge: .bottom) {
-            switch fileState.currentActiveFile {
-                case .file(let file):
-                    FileCheckpointListView(file: file)
-                case .localFile(let url):
-                    FileCheckpointListView(localFile: url)
-                case .temporaryFile(let url):
-                    FileCheckpointListView(localFile: url)
-                case .collaborationFile(let collaborationFile):
-                    FileCheckpointListView(file: collaborationFile)
-                default:
-                    EmptyView()
-            }
+        if appPreference.inspectorLayout == .sidebar {
+            contentView()
+                .toolbar {
+                    InspectorHeaderToolbar(
+                        title: String(localizable: .checkpoints),
+                        isInspectorPresented: layoutState.isInspectorPresented
+                    )
+                }
+        } else {
+            contentView()
         }
-#elseif os(iOS)
-        .sheet(isPresented: $isPresented) {
-            switch fileState.currentActiveFile {
-                case .file(let file):
-                    if #available(macOS 13.3, iOS 16.4, *), horizontalSizeClass == .regular {
-                        FileCheckpointListView(file: file)
-                            .presentationCompactAdaptation(.popover)
-                    } else {
-                        FileCheckpointListView(file: file)
-                    }
-                case .localFile(let url):
-                    if #available(macOS 13.3, iOS 16.4, *), horizontalSizeClass == .regular {
-                        FileCheckpointListView(localFile: url)
-                            .presentationCompactAdaptation(.popover)
-                    } else {
-                        FileCheckpointListView(localFile: url)
-                    }
-                case .temporaryFile(let url):
-                    if #available(macOS 13.3, iOS 16.4, *), horizontalSizeClass == .regular {
-                        FileCheckpointListView(localFile: url)
-                            .presentationCompactAdaptation(.popover)
-                    } else {
-                        FileCheckpointListView(localFile: url)
-                    }
-                case .collaborationFile(let collaborationFile):
-                    if #available(macOS 13.3, iOS 16.4, *), horizontalSizeClass == .regular {
-                        FileCheckpointListView(file: collaborationFile)
-                            .presentationCompactAdaptation(.popover)
-                    } else {
-                        FileCheckpointListView(file: collaborationFile)
-                    }
-                default:
-                    EmptyView()
-            }
-        }
+#else
+        contentView()
 #endif
     }
 }

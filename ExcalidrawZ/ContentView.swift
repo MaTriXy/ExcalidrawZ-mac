@@ -85,7 +85,7 @@ struct ContentView: View {
         ZStack {
             if horizontalSizeClass == .regular {
                 contentView()
-                    .modifier(LibraryTrailingSidebarModifier())
+                    .modifier(InspectorPresentationModifier())
             } else {
                 // Compact uses TabView, can not use library here.
                 contentView()
@@ -121,7 +121,7 @@ struct ContentView: View {
     }
     private func handleToggleInspector(_ notification: Notification) {
         guard window?.isKeyWindow == true else { return }
-        layoutState.isInspectorPresented.toggle()
+        layoutState.toggleInspector()
     }
     
     // Check if it is first launch by checking the files count.
