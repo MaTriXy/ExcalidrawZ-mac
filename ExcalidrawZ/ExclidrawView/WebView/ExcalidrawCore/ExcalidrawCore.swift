@@ -345,7 +345,8 @@ extension ExcalidrawCore {
         files: [String : ExcalidrawFile.ResourceFile]? = nil,
         embedScene: Bool = false,
         withBackground: Bool = true,
-        colorScheme: ColorScheme
+        colorScheme: ColorScheme,
+        exportScale: Int = 1
     ) async throws -> Data {
         let id = UUID().uuidString
         let script = try """
@@ -358,6 +359,7 @@ window.excalidrawZHelper.exportElementsToBlob(
         exportWithDarkMode: \(colorScheme == .dark),
         mimeType: 'image/png',
         quality: 100,
+        exportScale: \(exportScale),
     }
 ); 
 0;
@@ -390,14 +392,16 @@ window.excalidrawZHelper.exportElementsToBlob(
         embedScene: Bool = false,
         files: [String : ExcalidrawFile.ResourceFile]? = nil,
         withBackground: Bool = true,
-        colorScheme: ColorScheme
+        colorScheme: ColorScheme,
+        exportScale: Int = 1
     ) async throws -> PlatformImage {
         let data = try await self.exportElementsToPNGData(
             elements: elements,
             files: files,
             embedScene: embedScene,
             withBackground: withBackground,
-            colorScheme: colorScheme
+            colorScheme: colorScheme,
+            exportScale: exportScale
         )
         guard let image = PlatformImage(data: data) else {
             struct DecodeImageFailed: Error {}
@@ -694,5 +698,4 @@ window.excalidrawZHelper.exportElementsToBlob(
         try await webView.evaluateJavaScript("document.body.style = '\(enabled ? "" : "pointer-events: none;")'; 0;")
     }
 }
-
 

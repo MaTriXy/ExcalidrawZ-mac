@@ -46,10 +46,6 @@ struct ShareFileModifier: ViewModifier {
                     .swiftyAlert()
             }
         }
-#if os(macOS)
-        .frame(height: 300)
-#endif
-        
     }
 }
 
@@ -64,6 +60,9 @@ struct ShareView: View {
     
     @EnvironmentObject var exportState: ExportState
     
+#if canImport(AppKit)
+    @State private var window: NSWindow?
+#endif
     
     var sharedFile: ExcalidrawFile
     var containerSizeClass: UserInterfaceSizeClass?
@@ -81,7 +80,8 @@ struct ShareView: View {
 #endif
     }
     
-    @State private var route: NavigationPath = .init()
+    @State private var route: [Route] = []
+    @State private var activeRoute: Route?
     
 #if os(iOS)
     @State private var exportedPDFURL: URL?
@@ -89,6 +89,52 @@ struct ShareView: View {
     @State private var isArchiveFilesExporterPresented = false
     @State private var isArchiving = false
     @State private var archiveResult: ArchiveResult?
+
+    private var preferredSheetHeight: CGFloat {
+        #if os(macOS)
+        switch activeRoute {
+            case .exportImage:
+                return 442
+            case .exportFile:
+                return 250
+            case .svgPreview, .none:
+                return 300
+        }
+        #else
+        return 0
+        #endif
+    }
+
+#if os(macOS)
+    private func resizeSheetWindow(animated: Bool) {
+        guard let window else { return }
+
+        let currentContentRect = window.contentRect(forFrameRect: window.frame)
+        let targetContentRect = NSRect(
+            x: currentContentRect.origin.x,
+            y: currentContentRect.origin.y,
+            width: currentContentRect.width,
+            height: preferredSheetHeight
+        )
+
+        let targetFrameRect = window.frameRect(forContentRect: targetContentRect)
+        let heightDelta = targetFrameRect.height - window.frame.height
+
+        var nextFrame = window.frame
+        nextFrame.origin.y -= heightDelta
+        nextFrame.size.height = targetFrameRect.height
+
+        if animated {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.25
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                window.animator().setFrame(nextFrame, display: true)
+            }
+        } else {
+            window.setFrame(nextFrame, display: true)
+        }
+    }
+#endif
     
     var body: some View {
         NavigationStack(path: $route) {
@@ -100,12 +146,14 @@ struct ShareView: View {
                 Spacer()
                 HStack(spacing: 10) {
                     SquareButton(title: .localizable(.exportSheetButtonImage), icon: .photo) {
-                        route.append(Route.exportImage)
+                        activeRoute = .exportImage
+                        route.append(.exportImage)
                     }
                     .disabled(sharedFile.elements.isEmpty != false)
                     
                     SquareButton(title: .localizable(.exportSheetButtonFile), icon: .doc) {
-                        route.append(Route.exportFile)
+                        activeRoute = .exportFile
+                        route.append(.exportFile)
                     }
                     //                    }
                     //                    HStack(spacing: 10) {
@@ -175,6 +223,9 @@ struct ShareView: View {
                 }
                 .frame(height: 40)
             }
+            .onChange(of: route) { newValue in
+                activeRoute = newValue.last
+            }
             .navigationDestination(for: Route.self) { route in
                 ZStack {
                     switch route {
@@ -191,6 +242,14 @@ struct ShareView: View {
             }
             .padding(40)
 #if os(macOS)
+            .bindWindow($window)
+            .frame(height: preferredSheetHeight)
+            .onAppear {
+                resizeSheetWindow(animated: false)
+            }
+            .onChange(of: preferredSheetHeight) { _ in
+                resizeSheetWindow(animated: true)
+            }
             .overlay(alignment: .topLeading) {
                 Button {
                     dismiss()

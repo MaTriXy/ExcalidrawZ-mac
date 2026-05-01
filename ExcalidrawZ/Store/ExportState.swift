@@ -74,7 +74,8 @@ final class ExportState: ObservableObject {
         type: ImageType,
         embedScene: Bool,
         withBackground: Bool,
-        colorScheme: ColorScheme
+        colorScheme: ColorScheme,
+        exportScale: Int = 1
     ) async throws -> ExportedImageData {
         let dbFile = await self.excalidrawWebCoordinator?.parent?.file
         let collaborationFile = await self.excalidrawCollaborationWebCoordinator?.parent?.file
@@ -93,7 +94,8 @@ final class ExportState: ObservableObject {
             name: file.name ?? String(localizable: .generalUntitled),
             embedScene: embedScene,
             withBackground: withBackground,
-            colorScheme: colorScheme
+            colorScheme: colorScheme,
+            exportScale: exportScale
         )
     }
     
@@ -103,7 +105,8 @@ final class ExportState: ObservableObject {
         name: String,
         embedScene: Bool,
         withBackground: Bool,
-        colorScheme: ColorScheme
+        colorScheme: ColorScheme,
+        exportScale: Int = 1
     ) async throws -> ExportedImageData {
         guard let excalidrawWebCoordinator else {
             struct NoWebCoordinatorError: LocalizedError {
@@ -122,7 +125,8 @@ final class ExportState: ObservableObject {
                     elements: elements,
                     embedScene: embedScene,
                     withBackground: withBackground,
-                    colorScheme: colorScheme
+                    colorScheme: colorScheme,
+                    exportScale: exportScale
                 )
                 utType = embedScene ? .excalidrawPNG : .png
             case .svg:
