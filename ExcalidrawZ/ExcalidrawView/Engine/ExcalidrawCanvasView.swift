@@ -20,6 +20,7 @@ struct ExcalidrawCanvasView: View {
     @EnvironmentObject var fileState: FileState
     @EnvironmentObject var exportState: ExportState
     @EnvironmentObject var toolState: ToolState
+    @EnvironmentObject var canvasPreferencesState: CanvasPreferencesState
 
     let logger = Logger(label: "ExcalidrawCanvasView")
     
@@ -178,6 +179,7 @@ struct ExcalidrawCanvasView: View {
             case .normal:
                 exportState.excalidrawWebCoordinator = excalidrawCore
                 fileState.excalidrawWebCoordinator = excalidrawCore
+                canvasPreferencesState.coordinator = excalidrawCore
             case .collaboration:
                 exportState.excalidrawCollaborationWebCoordinator = excalidrawCore
                 fileState.excalidrawCollaborationWebCoordinator = excalidrawCore
@@ -191,7 +193,11 @@ struct ExcalidrawCanvasView: View {
             await MainActor.run {
                 loadingState = isLoading ? .loading : .loaded
             }
-            
+
+            if !isLoading, type == .normal {
+                Task { await syncCanvasPrefsFromWeb() }
+            }
+
 #if os(iOS)
             if !isLoading {
                 try? await Task.sleep(nanoseconds: UInt64(1e+9 * 0.5))
@@ -199,6 +205,15 @@ struct ExcalidrawCanvasView: View {
             }
 #endif
         }
+    }
+
+    /// Pull the active file's canvas preferences and reconcile our Swift mirror.
+    /// Called after each canvas load so a file switch can't leave stale prefs in the UI.
+    private func syncCanvasPrefsFromWeb() async {
+        guard let snapshot = try? await excalidrawCore.fetchCanvasPreferences() else {
+            return
+        }
+        canvasPreferencesState.apply(snapshot)
     }
     
     private func listenToErrors() async {

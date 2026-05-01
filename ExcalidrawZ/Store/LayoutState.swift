@@ -11,7 +11,7 @@ final class LayoutState: ObservableObject {
     enum InspectorTab: Hashable {
         case library
         case history
-        case canvasSettings
+        case preference
     }
 
     @Published var isSidebarPresented: Bool = true

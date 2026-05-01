@@ -129,6 +129,12 @@ extension ExcalidrawCore: WKScriptMessageHandler {
                     break
                     // self.handleUserSettingsChanged(message.data)
 
+                case .onCanvasPreferencesChanged(let message):
+                    let snapshot = message.data
+                    DispatchQueue.main.async {
+                        self.parent?.canvasPreferencesState.apply(snapshot)
+                    }
+
                 case .log(let logMessage):
                     _ = logMessage
                     // self.onWebLog(message: logMessage)
@@ -448,6 +454,9 @@ extension ExcalidrawCore {
         // User Settings
         case onUserSettingsChanged
 
+        // Canvas Preferences
+        case onCanvasPreferencesChanged
+
         case log
     }
     
@@ -481,6 +490,9 @@ extension ExcalidrawCore {
 
         // User Settings
         case onUserSettingsChanged(UserSettingsChangedMessage)
+
+        // Canvas Preferences
+        case onCanvasPreferencesChanged(CanvasPreferencesChangedMessage)
 
         case log(LogMessage)
         
@@ -545,6 +557,10 @@ extension ExcalidrawCore {
                 // User Settings
                 case .onUserSettingsChanged:
                     self = .onUserSettingsChanged(try UserSettingsChangedMessage(from: decoder))
+
+                // Canvas Preferences
+                case .onCanvasPreferencesChanged:
+                    self = .onCanvasPreferencesChanged(try CanvasPreferencesChangedMessage(from: decoder))
 
                 case .log:
                     self = .log(try LogMessage(from: decoder))
@@ -778,6 +794,11 @@ extension ExcalidrawCore {
     struct UserSettingsChangedMessage: AnyExcalidrawZMessage {
         var event: String
         var data: UserDrawingSettings
+    }
+
+    struct CanvasPreferencesChangedMessage: AnyExcalidrawZMessage {
+        var event: String
+        var data: CanvasPreferencesSnapshot
     }
 
     struct DidOpenLiveCollaborationMessage: AnyExcalidrawZMessage {

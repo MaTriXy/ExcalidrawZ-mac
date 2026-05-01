@@ -27,9 +27,9 @@ struct ExcalidrawTrailingControls: View {
         if containerHorizontalSizeClass != .compact {
             VStack(alignment: .trailing, spacing: 10) {
                 InspectorTabButton(
-                    tab: .canvasSettings,
+                    tab: .preference,
                     icon: .sliderHorizontal3,
-                    title: "Canvas"
+                    title: "Preference"
                 )
                 
                 InspectorTabButton(

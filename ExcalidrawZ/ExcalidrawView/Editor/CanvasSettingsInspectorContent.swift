@@ -9,32 +9,16 @@ import SwiftUI
 
 import ChocofordUI
 
-/// Inspector content showing per-canvas settings: select mode, view modes, snap behavior, etc.
-///
-/// UI scaffolding only. The toggles use `@State` placeholders — the real source of truth
-/// is the active file's Excalidraw `appState`. Wire them through `ExcalidrawCore` later.
+/// Inspector content for canvas-level preferences. Bindings drive `CanvasPreferencesState`
+/// directly — its per-field `didSet` pushes partial updates to the web side.
 struct CanvasSettingsInspectorContent: View {
     @EnvironmentObject var fileState: FileState
     @EnvironmentObject var layoutState: LayoutState
     @EnvironmentObject var appPreference: AppPreference
+    @EnvironmentObject var canvasPrefs: CanvasPreferencesState
 
-    enum SelectionMode: String, CaseIterable, Identifiable {
-        case wrap
-        case overlap
-        var id: String { rawValue }
-    }
-
-    @State private var selectionMode: SelectionMode = .wrap
-
+    /// Tool lock isn't part of canvas preferences — it's still driven by `toggleToolbarAction("Q")`.
     @State private var toolLockEnabled: Bool = false
-    @State private var stickToObjectsEnabled: Bool = false
-    @State private var gridEnabled: Bool = false
-    @State private var zenModeEnabled: Bool = false
-    @State private var viewModeEnabled: Bool = false
-    @State private var shapePropertiesPanelEnabled: Bool = false
-
-    @State private var arrowBindingEnabled: Bool = true
-    @State private var snapToMidpointsEnabled: Bool = true
 
     var body: some View {
 #if os(macOS)
@@ -42,7 +26,7 @@ struct CanvasSettingsInspectorContent: View {
             content()
                 .toolbar {
                     InspectorHeaderToolbar(
-                        title: "Canvas",
+                        title: "Preference",
                         isInspectorPresented: layoutState.isInspectorPresented
                     )
                 }
@@ -58,6 +42,10 @@ struct CanvasSettingsInspectorContent: View {
     private func content() -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                canvasBackgroundRow
+
+                Divider()
+
                 selectModeRow
 
                 Divider()
@@ -73,13 +61,26 @@ struct CanvasSettingsInspectorContent: View {
     }
 
     @ViewBuilder
+    private var canvasBackgroundRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Canvas background")
+            ColorButtonGroup(
+                colors: ColorPalette.backgroundQuickPicks,
+                selectedColor: canvasPrefs.viewBackgroundColor
+            ) { color in
+                canvasPrefs.viewBackgroundColor = color
+            }
+        }
+    }
+
+    @ViewBuilder
     private var selectModeRow: some View {
         HStack {
             Text("Select on")
             Spacer()
-            Picker("Select on", selection: $selectionMode) {
-                Text("Wrap").tag(SelectionMode.wrap)
-                Text("Overlap").tag(SelectionMode.overlap)
+            Picker("Select on", selection: $canvasPrefs.preferredSelectionTool) {
+                Text("Wrap").tag(CanvasPreferencesState.PreferredSelectionTool.selection)
+                Text("Overlap").tag(CanvasPreferencesState.PreferredSelectionTool.lasso)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -91,20 +92,20 @@ struct CanvasSettingsInspectorContent: View {
     @ViewBuilder
     private var shortcutToggles: some View {
         VStack(alignment: .leading, spacing: 8) {
-            toggleRow("Tool lock", shortcut: "Q", isOn: $toolLockEnabled)
-            toggleRow("Stick to objects", shortcut: "⌥S", isOn: $stickToObjectsEnabled)
-            toggleRow("Toggle grid", shortcut: "⌘'", isOn: $gridEnabled)
-            toggleRow("Zen mode", shortcut: "⌥Z", isOn: $zenModeEnabled)
-            toggleRow("View mode", shortcut: "⌥R", isOn: $viewModeEnabled)
-            toggleRow("Canvas & shape properties", shortcut: "⌥/", isOn: $shapePropertiesPanelEnabled)
+            toggleRow("Tool lock", shortcut: "Q", isOn: toolLockBinding)
+            toggleRow("Stick to objects", shortcut: "⌥S", isOn: $canvasPrefs.objectsSnapModeEnabled)
+            toggleRow("Toggle grid", shortcut: "⌘'", isOn: $canvasPrefs.gridModeEnabled)
+            toggleRow("Zen mode", shortcut: "⌥Z", isOn: $canvasPrefs.zenModeEnabled)
+            toggleRow("View mode", shortcut: "⌥R", isOn: $canvasPrefs.viewModeEnabled)
+            toggleRow("Canvas & shape properties", shortcut: "⌥/", isOn: $canvasPrefs.stats)
         }
     }
 
     @ViewBuilder
     private var plainToggles: some View {
         VStack(alignment: .leading, spacing: 8) {
-            toggleRow("Arrow binding", shortcut: nil, isOn: $arrowBindingEnabled)
-            toggleRow("Snap to midpoints", shortcut: nil, isOn: $snapToMidpointsEnabled)
+            toggleRow("Arrow binding", shortcut: nil, isOn: bindingPreferenceBinding)
+            toggleRow("Snap to midpoints", shortcut: nil, isOn: $canvasPrefs.isMidpointSnappingEnabled)
         }
     }
 
@@ -128,4 +129,28 @@ struct CanvasSettingsInspectorContent: View {
         }
         .toggleStyle(.switch)
     }
+
+    // MARK: - UI-only Bindings
+
+    /// Arrow binding: enum on the wire, Bool in the UI.
+    private var bindingPreferenceBinding: Binding<Bool> {
+        Binding(
+            get: { canvasPrefs.bindingPreference == .enabled },
+            set: { canvasPrefs.bindingPreference = $0 ? .enabled : .disabled }
+        )
+    }
+
+    /// Tool lock: not in canvas preferences — uses the toolbar action shortcut "Q".
+    private var toolLockBinding: Binding<Bool> {
+        Binding(
+            get: { toolLockEnabled },
+            set: { newValue in
+                toolLockEnabled = newValue
+                Task {
+                    try? await fileState.excalidrawWebCoordinator?.toggleToolbarAction(key: Character("q"))
+                }
+            }
+        )
+    }
+
 }

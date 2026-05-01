@@ -70,7 +70,7 @@ struct InspectorPresentationModifier: ViewModifier {
                 LibraryView(librariesToImport: $librariesToImport)
             case .history:
                 FileHistoryInspectorContent()
-            case .canvasSettings:
+            case .preference:
                 CanvasSettingsInspectorContent()
         }
     }
@@ -81,8 +81,8 @@ struct InspectorPresentationModifier: ViewModifier {
                 String(localizable: .librariesTitle)
             case .history:
                 String(localizable: .checkpoints)
-            case .canvasSettings:
-                "Canvas"
+            case .preference:
+                "Preference"
         }
     }
 

@@ -21,7 +21,7 @@ struct ContentViewDetail: View {
     @Binding var isSettingsPresented: Bool
     
     @StateObject private var toolState = ToolState()
-    
+
     var body: some View {
         splitViewsContent()
             .modifier(ExcalidrawEditorToolbarModifier())

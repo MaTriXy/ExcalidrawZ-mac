@@ -31,6 +31,7 @@ struct ContentView: View {
     @StateObject private var exportState = ExportState()
     @StateObject private var layoutState = LayoutState()
     @StateObject private var shareFileState = ShareFileState()
+    @StateObject private var canvasPreferencesState = CanvasPreferencesState()
 
 #if canImport(AppKit)
     @State private var window: NSWindow?
@@ -61,6 +62,7 @@ struct ContentView: View {
             .environmentObject(exportState)
             .environmentObject(layoutState)
             .environmentObject(shareFileState)
+            .environmentObject(canvasPreferencesState)
             .modifier(DragStateModifier())
             .modifier(StartupSyncModifier())
             .modifier(CoreDataMigrationModifier())

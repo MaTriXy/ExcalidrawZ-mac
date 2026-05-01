@@ -64,7 +64,7 @@ struct FileCheckpointRowView<Checkpoint: FileCheckpointRepresentable>: View {
     
     @MainActor @ViewBuilder
     private func label() -> some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text((checkpoint.filename ?? ""))
                     .font(.headline)
@@ -83,11 +83,14 @@ struct FileCheckpointRowView<Checkpoint: FileCheckpointRepresentable>: View {
                 
                 Text("\(fileSize.formatted(.byteCount(style: .file)))")
                 
-                Text(" · ")
-                Text(checkpoint.updatedAt?.formatted() ?? "")
             }
             .font(.footnote)
             .foregroundStyle(.secondary)
+            
+            Text(checkpoint.updatedAt?.formatted() ?? "")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            
         }
         .lineLimit(1)
         .padding(.horizontal, 4)
