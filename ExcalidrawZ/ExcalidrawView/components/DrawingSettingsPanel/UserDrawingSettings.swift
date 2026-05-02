@@ -8,7 +8,7 @@
 import Foundation
 
 /// User drawing settings for Excalidraw
-struct UserDrawingSettings: Codable {
+struct UserDrawingSettings: Codable, Equatable {
     var currentItemStrokeWidth: Double?
     var currentItemStrokeColor: String?
     var currentItemBackgroundColor: String?
@@ -68,6 +68,19 @@ struct UserDrawingSettings: Codable {
         case currentItemEndArrowhead
     }
 
+    /// Parse from a file's raw JSON `Data`. Goes straight through
+    /// `JSONSerialization` and into `from(dict:)` — bypasses the web view, which
+    /// is important for fresh/empty files: Excalidraw's `restoreAppState` carries
+    /// the previous file's `currentItem*` values forward as defaults, so reading
+    /// live appState would return stale values.
+    static func from(fileContent data: Data) -> UserDrawingSettings {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let appState = json["appState"] as? [String: Any] else {
+            return UserDrawingSettings()
+        }
+        return from(dict: appState)
+    }
+
     /// Create from dictionary (from JavaScript message)
     static func from(dict: [String: Any]) -> UserDrawingSettings {
         var settings = UserDrawingSettings()
@@ -93,8 +106,8 @@ struct UserDrawingSettings: Codable {
         if let roundness = dict["currentItemRoundness"] as? String {
             settings.currentItemRoundness = ExcalidrawStrokeSharpness(rawValue: roundness)
         }
-        if let arrowType =  dict["currentItemArrowType"] as? ArrowType {
-            settings.currentItemArrowType = arrowType
+        if let arrowTypeStr = dict["currentItemArrowType"] as? String {
+            settings.currentItemArrowType = ArrowType(rawValue: arrowTypeStr)
         }
 
         // Handle arrowheads with proper null/undefined distinction
@@ -124,6 +137,104 @@ struct UserDrawingSettings: Codable {
         // else: field not present -> nil (undefined)
 
         return settings
+    }
+}
+
+extension UserDrawingSettings {
+    /// Single source of truth for "what does this field look like when unset?".
+    /// Both `DrawingSettingsPanel` (as `??` fallbacks) and `uiDefaults` reference
+    /// these so the two stay in sync — drift here would silently break the
+    /// canvas-vs-global comparison.
+    enum Defaults {
+        static let strokeWidth: Double = 2
+        static let strokeColor: String = "#1e1e1e"
+        static let backgroundColor: String = "transparent"
+        static let strokeStyle: ExcalidrawStrokeStyle = .solid
+        static let fillStyle: ExcalidrawFillStyle = .solid
+        static let roughness: Double = 1
+        static let opacity: Double = 100
+        static let fontFamily: FontFamily = .handDrawn
+        static let fontSize: Double = 20
+        static let textAlign: String = "left"
+        static let roundness: ExcalidrawStrokeSharpness = .round
+        static let arrowType: ArrowType = .sharp
+        static let startArrowhead: Nullable<Arrowhead> = .null
+        static let endArrowhead: Nullable<Arrowhead> = .value(.arrow)
+    }
+
+    /// Convenience: a fully-populated struct using `Defaults` for every field.
+    /// Used by `matches(template:)` to fill nil fields before comparison.
+    static let uiDefaults: UserDrawingSettings = {
+        var s = UserDrawingSettings()
+        s.currentItemStrokeWidth = Defaults.strokeWidth
+        s.currentItemStrokeColor = Defaults.strokeColor
+        s.currentItemBackgroundColor = Defaults.backgroundColor
+        s.currentItemStrokeStyle = Defaults.strokeStyle
+        s.currentItemFillStyle = Defaults.fillStyle
+        s.currentItemRoughness = Defaults.roughness
+        s.currentItemOpacity = Defaults.opacity
+        s.currentItemFontFamily = Defaults.fontFamily
+        s.currentItemFontSize = Defaults.fontSize
+        s.currentItemTextAlign = Defaults.textAlign
+        s.currentItemRoundness = Defaults.roundness
+        s.currentItemArrowType = Defaults.arrowType
+        s.currentItemStartArrowhead = Defaults.startArrowhead
+        s.currentItemEndArrowhead = Defaults.endArrowhead
+        return s
+    }()
+
+    /// Returns a copy with nil fields filled in from `defaults`. Already-set fields
+    /// are kept untouched (the inverse of `merging(template:)`).
+    func filling(defaults: UserDrawingSettings) -> UserDrawingSettings {
+        var result = self
+        if result.currentItemStrokeWidth == nil { result.currentItemStrokeWidth = defaults.currentItemStrokeWidth }
+        if result.currentItemStrokeColor == nil { result.currentItemStrokeColor = defaults.currentItemStrokeColor }
+        if result.currentItemBackgroundColor == nil { result.currentItemBackgroundColor = defaults.currentItemBackgroundColor }
+        if result.currentItemStrokeStyle == nil { result.currentItemStrokeStyle = defaults.currentItemStrokeStyle }
+        if result.currentItemFillStyle == nil { result.currentItemFillStyle = defaults.currentItemFillStyle }
+        if result.currentItemRoughness == nil { result.currentItemRoughness = defaults.currentItemRoughness }
+        if result.currentItemOpacity == nil { result.currentItemOpacity = defaults.currentItemOpacity }
+        if result.currentItemFontFamily == nil { result.currentItemFontFamily = defaults.currentItemFontFamily }
+        if result.currentItemFontSize == nil { result.currentItemFontSize = defaults.currentItemFontSize }
+        if result.currentItemTextAlign == nil { result.currentItemTextAlign = defaults.currentItemTextAlign }
+        if result.currentItemRoundness == nil { result.currentItemRoundness = defaults.currentItemRoundness }
+        if result.currentItemArrowType == nil { result.currentItemArrowType = defaults.currentItemArrowType }
+        if result.currentItemStartArrowhead == nil { result.currentItemStartArrowhead = defaults.currentItemStartArrowhead }
+        if result.currentItemEndArrowhead == nil { result.currentItemEndArrowhead = defaults.currentItemEndArrowhead }
+        return result
+    }
+
+    /// Returns a copy where every non-nil field in `template` overrides this struct's
+    /// value for that field; nil fields in the template are skipped (current value kept).
+    /// Pairs with `matches(template:)` — `merging` is the action that makes `matches` true.
+    func merging(template: UserDrawingSettings) -> UserDrawingSettings {
+        var result = self
+        if let v = template.currentItemStrokeWidth { result.currentItemStrokeWidth = v }
+        if let v = template.currentItemStrokeColor { result.currentItemStrokeColor = v }
+        if let v = template.currentItemBackgroundColor { result.currentItemBackgroundColor = v }
+        if let v = template.currentItemStrokeStyle { result.currentItemStrokeStyle = v }
+        if let v = template.currentItemFillStyle { result.currentItemFillStyle = v }
+        if let v = template.currentItemRoughness { result.currentItemRoughness = v }
+        if let v = template.currentItemOpacity { result.currentItemOpacity = v }
+        if let v = template.currentItemFontFamily { result.currentItemFontFamily = v }
+        if let v = template.currentItemFontSize { result.currentItemFontSize = v }
+        if let v = template.currentItemTextAlign { result.currentItemTextAlign = v }
+        if let v = template.currentItemRoundness { result.currentItemRoundness = v }
+        if let v = template.currentItemArrowType { result.currentItemArrowType = v }
+        if let v = template.currentItemStartArrowhead { result.currentItemStartArrowhead = v }
+        if let v = template.currentItemEndArrowhead { result.currentItemEndArrowhead = v }
+        return result
+    }
+
+    /// True iff the canvas's effective value equals the template's effective value
+    /// for every field. Cascade is canvas → template → ui-defaults — a nil on the
+    /// canvas inherits from the template, and a nil on the template inherits from
+    /// the ui-defaults. Customization only happens when the canvas explicitly sets
+    /// a value that disagrees with whatever the template ends up resolving to.
+    func matches(template: UserDrawingSettings) -> Bool {
+        let effectiveTemplate = template.filling(defaults: .uiDefaults)
+        let effectiveSelf = self.filling(defaults: effectiveTemplate)
+        return effectiveSelf == effectiveTemplate
     }
 }
 

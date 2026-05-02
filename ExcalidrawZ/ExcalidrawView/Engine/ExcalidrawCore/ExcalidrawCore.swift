@@ -13,37 +13,6 @@ import CoreData
 
 typealias CollaborationInfo = ExcalidrawCore.CollaborationInfo
 
-actor ExportImageManager {
-    var flyingRequests: [String : (String) -> Void] = [:]
-    
-    public func requestExport(id: String) async -> String {
-        await withCheckedContinuation { continuation in
-            self.flyingRequests[id] = { data in
-                continuation.resume(returning: data)
-            }
-        }
-    }
-    
-    public func responseExport(id: String, blobString: String) {
-        self.flyingRequests[id]?(blobString)
-    }
-}
-actor AllMediaTransferManager {
-    var flyingRequests: [String : ([ExcalidrawFile.ResourceFile]) -> Void] = [:]
-    
-    public func requestExport(id: String) async -> [ExcalidrawFile.ResourceFile] {
-        await withCheckedContinuation { continuation in
-            self.flyingRequests[id] = { data in
-                continuation.resume(returning: data)
-            }
-        }
-    }
-    
-    public func responseExport(id: String, resourceFiles: [ExcalidrawFile.ResourceFile]) {
-        self.flyingRequests[id]?(resourceFiles)
-    }
-}
-
 class ExcalidrawCore: NSObject, ObservableObject {
 #if canImport(AppKit)
     typealias PlatformImage = NSImage
@@ -79,9 +48,6 @@ class ExcalidrawCore: NSObject, ObservableObject {
     var downloadCache: [String : Data] = [:]
     var downloads: [URLRequest : URL] = [:]
     
-    let blobRequestQueue = DispatchQueue(label: "BlobRequestQueue", qos: .background)
-    var exportImageManager = ExportImageManager()
-    var allMediaTransferManager = AllMediaTransferManager()
     
     @Published var canUndo = false
     @Published var canRedo = false
@@ -221,20 +187,21 @@ class ExcalidrawCore: NSObject, ObservableObject {
 
 /// Keep stateless
 extension ExcalidrawCore {
-    func loadFile(from file: ExcalidrawFile?, force: Bool = false) {
-        guard !self.isLoading, !self.webView.isLoading else { return }
+    /// Loads a file into the web view and returns once Excalidraw has actually applied
+    /// the new scene (the JS helper is async). Callers can chain follow-up work like
+    /// re-syncing canvas preferences without resorting to a delay.
+    /// The optional `LoadFileResult` exposes JS-side telemetry (element count, duration)
+    /// — currently unused, but typed so we don't have to touch this signature again.
+    @discardableResult
+    func loadFile(from file: ExcalidrawFile?, force: Bool = false) async -> LoadFileResult? {
+        guard !self.isLoading, !self.webView.isLoading else { return nil }
         guard let file = file,
-              let data = file.content else { return }
-        Task.detached {
-            do {
-                try await self.webActor.loadFile(id: file.id, data: data, force: force)
-                
-                if await self.parent?.appPreference.useCustomDrawingSettings == true {
-                    try await self.applyUserSettings()
-                }
-            } catch {
-                self.publishError(error)
-            }
+              let data = file.content else { return nil }
+        do {
+            return try await self.webActor.loadFile(id: file.id, data: data, force: force)
+        } catch {
+            self.publishError(error)
+            return nil
         }
     }
     
@@ -349,39 +316,28 @@ extension ExcalidrawCore {
         colorScheme: ColorScheme,
         exportScale: Int = 1
     ) async throws -> Data {
-        let id = UUID().uuidString
-        let script = try """
-window.excalidrawZHelper.exportElementsToBlob(
-    '\(id)', \(elements.jsonStringified()), 
-    \(files?.jsonStringified() ?? "undefined"), 
-    {
-        exportEmbedScene: \(embedScene),
-        withBackground: \(withBackground), 
-        exportWithDarkMode: \(colorScheme == .dark),
-        mimeType: 'image/png',
-        quality: 100,
-        exportScale: \(exportScale),
-    }
-); 
-0;
-"""
-        Task { @MainActor in
-            do {
-                try await webView.evaluateJavaScript(script)
-            } catch {
-                self.logger.error("\(String(describing: error))")
+        let elementsJSON = try elements.jsonStringified()
+        let filesJSON = try files?.jsonStringified() ?? "undefined"
+        let script = """
+        return await window.excalidrawZHelper.exportElementsToBlob(
+            null, \(elementsJSON), \(filesJSON), {
+                exportEmbedScene: \(embedScene),
+                withBackground: \(withBackground),
+                exportWithDarkMode: \(colorScheme == .dark),
+                mimeType: 'image/png',
+                quality: 100,
+                exportScale: \(exportScale)
             }
-        }
-//        let dataString: String = await withCheckedContinuation { continuation in
-//            blobRequestQueue.async {
-//                self.flyingBlobsRequest[id] = { data in
-//                    continuation.resume(returning: data)
-//                    self.flyingBlobsRequest.removeValue(forKey: id)
-//                }
-//            }
-//        }
-        let dataString = await exportImageManager.requestExport(id: id)
-        guard let data = Data(base64Encoded: dataString) else {
+        );
+        """
+        let raw = try await webView.callAsyncJavaScript(
+            script,
+            arguments: [:],
+            contentWorld: .page
+        )
+        guard let dict = raw as? [String: Any],
+              let dataString = dict["blobData"] as? String,
+              let data = Data(base64Encoded: dataString) else {
             struct DecodeImageFailed: Error {}
             throw DecodeImageFailed()
         }
@@ -418,16 +374,24 @@ window.excalidrawZHelper.exportElementsToBlob(
         withBackground: Bool = true,
         colorScheme: ColorScheme
     ) async throws -> Data {
-        let id = UUID().uuidString
-        let script = try "window.excalidrawZHelper.exportElementsToSvg('\(id)', \(elements.jsonStringified()), \(files?.jsonStringified() ?? "undefined"), \(embedScene), \(withBackground), \(colorScheme == .dark)); 0;"
-        Task { @MainActor in
-            do {
-                try await webView.evaluateJavaScript(script)
-            } catch {
-                self.logger.error("\(String(describing: error))")
-            }
+        let elementsJSON = try elements.jsonStringified()
+        let filesJSON = try files?.jsonStringified() ?? "undefined"
+        let script = """
+        return await window.excalidrawZHelper.exportElementsToSvg(
+            null, \(elementsJSON), \(filesJSON),
+            \(embedScene), \(withBackground), \(colorScheme == .dark)
+        );
+        """
+        let raw = try await webView.callAsyncJavaScript(
+            script,
+            arguments: [:],
+            contentWorld: .page
+        )
+        guard let dict = raw as? [String: Any],
+              let svg = dict["svg"] as? String else {
+            struct ExportSVGFailed: Error {}
+            throw ExportSVGFailed()
         }
-        let svg = await exportImageManager.requestExport(id: id)
         let minisizedSvg = removeWidthAndHeight(from: svg).trimmingCharacters(in: .whitespacesAndNewlines)
         
         func removeWidthAndHeight(from svgContent: String) -> String {
@@ -491,22 +455,21 @@ window.excalidrawZHelper.exportElementsToBlob(
         
     }
     
-    /// Get Excadliraw Indexed DB Data
+    /// Get Excalidraw Indexed DB Data
     func getExcalidrawStore() async throws -> [ExcalidrawFile.ResourceFile] {
-        print(#function)
-        
-        let id = UUID().uuidString
-        
-        Task { @MainActor in
-            do {
-                try await webView.evaluateJavaScript("window.excalidrawZHelper.getAllMedias('\(id)'); 0;")
-            } catch {
-                self.logger.error("\(String(describing: error))")
-            }
+        let raw = try await webView.callAsyncJavaScript(
+            "return await window.excalidrawZHelper.getAllMedias(null);",
+            arguments: [:],
+            contentWorld: .page
+        )
+        guard let dict = raw as? [String: Any], let filesAny = dict["files"] else {
+            struct GetAllMediasFailed: Error {}
+            throw GetAllMediasFailed()
         }
-        
-        let files: [ExcalidrawFile.ResourceFile] = await allMediaTransferManager.requestExport(id: id)
-        return files
+        // The JS side already returns plain JSON-compatible objects; round-trip
+        // through JSONSerialization to drive `Codable`.
+        let data = try JSONSerialization.data(withJSONObject: filesAny)
+        return try JSONDecoder().decode([ExcalidrawFile.ResourceFile].self, from: data)
     }
     
     /// Insert media files to IndexedDB

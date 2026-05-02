@@ -126,7 +126,7 @@ struct FileCheckpointDetailView<Checkpoint: FileCheckpointRepresentable>: View {
                         if case .file(let file) = fileState.currentActiveFile {
                             file.content = content
                             file.name = checkpoint.filename
-                            fileState.excalidrawWebCoordinator?.loadFile(from: file, force: true)
+                            Task { await fileState.excalidrawWebCoordinator?.loadFile(from: file, force: true) }
                         }
                         fileState.didUpdateFile = false
                         dismiss()
@@ -145,7 +145,7 @@ struct FileCheckpointDetailView<Checkpoint: FileCheckpointRepresentable>: View {
 
                     // Update UI on main thread (after file is written)
                     await MainActor.run {
-                        fileState.excalidrawWebCoordinator?.loadFile(from: parsedFile, force: true)
+                        Task { await fileState.excalidrawWebCoordinator?.loadFile(from: parsedFile, force: true) }
                         fileState.didUpdateFile = false
                         dismiss()
                     }

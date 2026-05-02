@@ -68,22 +68,10 @@ extension ExcalidrawCore: WKScriptMessageHandler {
                     DispatchQueue.main.async {
                         self.parent?.toolState.isToolLocked = message.data
                     }
-                case .getElementsBlob(let blobData):
-                    Task {
-                        await self.exportImageManager.responseExport(id: blobData.data.id, blobString: blobData.data.blobData)
-                    }
-                case .getElementsSVG(let svgData):
-                    Task {
-                        await self.exportImageManager.responseExport(id: svgData.data.id, blobString: svgData.data.svg)
-                    }
                 case .onLoadLibrary(let message):
                     self.onLoadLibrary(library: message.data)
                 case .addToLibrary(let message):
                     self.addToLibrary(item: message.data)
-                case .getAllMedias(let data):
-                    Task {
-                        await self.allMediaTransferManager.responseExport(id: data.data.id, resourceFiles: data.data.files)
-                    }
                 case .historyStateChanged(let message):
                     switch message.data.type {
                         case .redo:
@@ -433,11 +421,8 @@ extension ExcalidrawCore {
         case onBlur
         case didSetActiveTool
         case didToggleToolLock
-        case getElementsBlob
-        case getElementsSVG
         case onLoadLibrary
         case addToLibrary
-        case getAllMedias
         case historyStateChanged
         case didPenDown
         case didSelectElements
@@ -470,11 +455,8 @@ extension ExcalidrawCore {
         case onBlur
         case didSetActiveTool(SetActiveToolMessage)
         case didToggleToolLock(DidtoggleToolLockMessage)
-        case getElementsBlob(ExcalidrawElementsBlobData)
-        case getElementsSVG(ExcalidrawElementsSVGData)
         case onLoadLibrary(OnAddLibraryMessage)
         case addToLibrary(AddToLibraryMessage)
-        case getAllMedias(GetAllMediasMessage)
         case historyStateChanged(HistoryStateChangedMessage)
         case didPenDown
         case didSelectElements(DidSelectElementsMessage)
@@ -523,16 +505,10 @@ extension ExcalidrawCore {
                     self = .didSetActiveTool(try SetActiveToolMessage(from: decoder))
                 case .didToggleToolLock:
                     self = .didToggleToolLock(try DidtoggleToolLockMessage(from: decoder))
-                case .getElementsBlob:
-                    self = .getElementsBlob(try ExcalidrawElementsBlobData(from: decoder))
-                case .getElementsSVG:
-                    self = .getElementsSVG(try ExcalidrawElementsSVGData(from: decoder))
                 case .onLoadLibrary:
                     self = .onLoadLibrary(try OnAddLibraryMessage(from: decoder))
                 case .addToLibrary:
                     self = .addToLibrary(try AddToLibraryMessage(from: decoder))
-                case .getAllMedias:
-                    self = .getAllMedias(try GetAllMediasMessage(from: decoder))
                 case .historyStateChanged:
                     self = .historyStateChanged(try HistoryStateChangedMessage(from: decoder))
                 case .didPenDown:
@@ -652,26 +628,6 @@ extension ExcalidrawCore {
         var files: [String : ExcalidrawFile.ResourceFile]
     }
 
-    struct ExcalidrawElementsBlobData: AnyExcalidrawZMessage {
-        struct BlobData: Codable {
-            var id: String
-            var blobData: String
-        }
-        
-        var event: String
-        var data: BlobData
-    }
-
-    struct ExcalidrawElementsSVGData: AnyExcalidrawZMessage {
-        struct SVGData: Codable {
-            var id: String
-            var svg: String
-        }
-        
-        var event: String
-        var data: SVGData
-    }
-
     struct SaveFileDoneMessage: AnyExcalidrawZMessage {
         var event: String
         var data: String //SaveFileDoneMessageData
@@ -735,17 +691,6 @@ extension ExcalidrawCore {
     struct AddToLibraryMessage: AnyExcalidrawZMessage {
         var event: String
         var data: ExcalidrawLibrary.Item
-    }
-
-    struct GetAllMediasMessage: AnyExcalidrawZMessage {
-        var event: String
-        var data: MediasData
-        
-        struct MediasData: Codable {
-            var id: String
-            var files: [ExcalidrawFile.ResourceFile]
-        }
-        
     }
 
     struct HistoryStateChangedMessage: AnyExcalidrawZMessage {

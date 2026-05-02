@@ -78,6 +78,12 @@ struct ContentView: View {
             .onReceive(NotificationCenter.default.publisher(for: .toggleInspector)) { notification in
                 handleToggleInspector(notification)
             }
+            .onChange(of: fileState.currentActiveFile) { newValue in
+                // Going back to Home: nothing to inspect, so collapse the panel.
+                if newValue == nil, layoutState.isInspectorPresented {
+                    layoutState.isInspectorPresented = false
+                }
+            }
             .withContainerSize()
             .task { await prepare() }
     }

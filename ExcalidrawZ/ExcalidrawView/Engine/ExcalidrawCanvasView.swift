@@ -106,20 +106,13 @@ struct ExcalidrawCanvasView: View {
             .onReceive(
                 NotificationCenter.default.publisher(for: .forceReloadExcalidrawFile)
             ) { _ in
-                excalidrawCore.loadFile(from: file, force: true)
+                Task { await excalidrawCore.loadFile(from: file, force: true) }
             }
             .onReceive(
                 NotificationCenter.default.publisher(for: .captureCurrentDrawingSettings)
             ) { _ in
                 Task {
                     await captureCurrentDrawingSettings()
-                }
-            }
-            .onReceive(
-                NotificationCenter.default.publisher(for: .applyUserDrawingSettings)
-            ) { _ in
-                Task {
-                    try? await excalidrawCore.applyUserSettings()
                 }
             }
             .onChange(of: interactionEnabled) { enabled in
@@ -196,6 +189,7 @@ struct ExcalidrawCanvasView: View {
 
             if !isLoading, type == .normal {
                 Task { await syncCanvasPrefsFromWeb() }
+                await MainActor.run { syncCanvasDrawingSettingsFromFile() }
             }
 
 #if os(iOS)
@@ -215,6 +209,30 @@ struct ExcalidrawCanvasView: View {
         }
         canvasPreferencesState.apply(snapshot)
     }
+
+    /// Drawing prefs come from the file's own JSON appState — not from a web read.
+    /// Excalidraw's `restoreAppState` carries `currentItem*` values forward from the
+    /// previous file as defaults, so reading live state would surface stale values.
+    ///
+    /// Two writes happen here:
+    ///   - **mirror** gets just the file's values (pristine; the inspector's
+    ///     `matches()` does its own cascade for comparison).
+    ///   - **web** gets the *effective* state (file → global → ui-defaults) so
+    ///     actual drawing uses the right colors even for fields the file doesn't
+    ///     explicitly set, and any `restoreAppState` contamination is overwritten.
+    @MainActor
+    private func syncCanvasDrawingSettingsFromFile() {
+        let fileSettings = file?.content.map(UserDrawingSettings.from(fileContent:))
+            ?? UserDrawingSettings()
+        canvasPreferencesState.drawingSettings.apply(fileSettings)
+
+        let effective = fileSettings
+            .filling(defaults: appPreference.customDrawingSettings)
+            .filling(defaults: .uiDefaults)
+        Task {
+            try? await excalidrawCore.applyUserSettings(effective)
+        }
+    }
     
     private func listenToErrors() async {
         for await error in excalidrawCore.errorStream {
@@ -228,13 +246,23 @@ struct ExcalidrawCanvasView: View {
     
     private func handleFileChange(_ newFile: ExcalidrawFile?) {
         guard !excalidrawCore.webView.isLoading else { return }
-        
+
         if type == .collaboration {
             if newFile?.roomID?.isEmpty == false {
                 // has roomID
             }
         } else if let newFile {
-            excalidrawCore.loadFile(from: newFile)
+            // Switching files within the same WebView session doesn't toggle the
+            // WebView-level `isLoading`, so the sync hooked to that signal won't
+            // fire. Now that `loadFile` properly awaits Excalidraw's scene
+            // application, we can chain the re-sync directly.
+            Task {
+                await excalidrawCore.loadFile(from: newFile)
+                if type == .normal {
+                    await syncCanvasPrefsFromWeb()
+                    await MainActor.run { syncCanvasDrawingSettingsFromFile() }
+                }
+            }
         }
     }
     

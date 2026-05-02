@@ -40,8 +40,6 @@ struct ExcalidrawSettingsView: View {
 
     private func saveSettings() {
         appPreference.customDrawingSettings = editingSettings
-        // Notify ExcalidrawCanvasView to apply settings immediately
-        NotificationCenter.default.post(.applyUserDrawingSettings())
     }
     
     @ViewBuilder
@@ -53,64 +51,53 @@ struct ExcalidrawSettingsView: View {
     @ViewBuilder
     private func customDrawingSettingsSection() -> some View {
         Section {
-            Toggle(isOn: $appPreference.useCustomDrawingSettings) {
-                Text(localizable: .settingsExcalidrawToggleUnifiedDrawingSettings)
-            }
-            if appPreference.useCustomDrawingSettings {
-                HStack {
-                    VStack(alignment: .leading) {
-                        // Action Buttons
-                        HStack(spacing: 8) {
-                            Button {
-                                NotificationCenter.default.post(.captureCurrentDrawingSettings())
-                                Task {
-                                    loadSettings()
-                                    
-                                    try? await Task.sleep(nanoseconds: UInt64(1e+9 * 0.3))
-                                    
-                                    loadSettings()
-                                    
-                                    try? await Task.sleep(nanoseconds: UInt64(1e+9 * 0.5))
-                                    
-                                    loadSettings()
-                                }
-                            } label: {
-                                Label(.localizable(.settingsExcalidrawButtonCaptureCurrentSettings), systemSymbol: .arrowDownCircle)
+            HStack {
+                VStack(alignment: .leading) {
+                    HStack(spacing: 8) {
+                        Button {
+                            NotificationCenter.default.post(.captureCurrentDrawingSettings())
+                            Task {
+                                loadSettings()
+
+                                try? await Task.sleep(nanoseconds: UInt64(1e+9 * 0.3))
+
+                                loadSettings()
+
+                                try? await Task.sleep(nanoseconds: UInt64(1e+9 * 0.5))
+
+                                loadSettings()
                             }
-                            .buttonStyle(.bordered)
-                            
-                            Button {
-                                editingSettings = UserDrawingSettings()
-                                saveSettings()
-                            } label: {
-                                Label(.localizable(.generalButtonReset), systemSymbol: .arrowCounterclockwise)
-                            }
-                            .buttonStyle(.bordered)
+                        } label: {
+                            Label(.localizable(.settingsExcalidrawButtonCaptureCurrentSettings), systemSymbol: .arrowDownCircle)
                         }
-                        .modernButtonStyle(style: .glass, shape: .modern)
-                        
-                        DrawingSettingsPanel(
-                            settings: $editingSettings,
-                            onSettingsChange: saveSettings
-                        )
-                        .padding(.horizontal, 12)
-                        .frame(width: 260, alignment: .leading)
+                        .buttonStyle(.bordered)
+
+                        Button {
+                            editingSettings = UserDrawingSettings()
+                            saveSettings()
+                        } label: {
+                            Label(.localizable(.generalButtonReset), systemSymbol: .arrowCounterclockwise)
+                        }
+                        .buttonStyle(.bordered)
                     }
-                    Spacer(minLength: 0)
+                    .modernButtonStyle(style: .glass, shape: .modern)
+
+                    DrawingSettingsPanel(
+                        settings: $editingSettings,
+                        onSettingsChange: saveSettings
+                    )
+                    .padding(.horizontal, 12)
+                    .frame(width: 260, alignment: .leading)
                 }
+                Spacer(minLength: 0)
             }
         } header: {
             Text(localizable: .settingsExcalidrawDrawingSettingsTitle)
         } footer: {
             HStack {
                 Spacer()
-                if appPreference.useCustomDrawingSettings {
-                    Text(localizable: .settingsExcalidrawUseUnifiedDrawingSettingsMessage)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text(localizable: .settingsExcalidrawUseIndividualDrawingSettingsMessage)
-                        .foregroundStyle(.secondary)
-                }
+                Text("These defaults apply to new canvases. Override per canvas from the Preferences inspector.")
+                    .foregroundStyle(.secondary)
             }
         }
     }

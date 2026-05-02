@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 /// Mirror of the canvas-level preferences exposed by `excalidrawZHelper`.
 ///
@@ -40,9 +41,22 @@ final class CanvasPreferencesState: ObservableObject {
     }
 
     /// Set by `ExcalidrawCanvasView.setupCoordinators` once the engine is ready.
-    weak var coordinator: ExcalidrawCore?
+    weak var coordinator: ExcalidrawCore? {
+        didSet { drawingSettings.coordinator = coordinator }
+    }
+
+    /// Drawing-level prefs (stroke color, font, roughness, etc.). Conceptually a
+    /// child of canvas preferences, but uses a different JS bridge so it's its own
+    /// ObservableObject. Changes here propagate via the manual forwarder below.
+    let drawingSettings = CanvasDrawingSettingsState()
 
     private var isApplyingFromWeb = false
+    private var drawingSettingsCancellable: AnyCancellable?
+
+    init() {
+        drawingSettingsCancellable = drawingSettings.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+    }
 
     @Published var theme: Theme = .light {
         didSet { pushField { $0.theme = theme } }

@@ -9,23 +9,25 @@ import Foundation
 import WebKit
 
 extension ExcalidrawCore {
-    /// Apply user drawing settings to Excalidraw
-    /// This method should be called after file load is complete
+    /// Apply the global default drawing settings stored in `AppPreference` to the
+    /// current canvas. The Preferences inspector pushes global → canvas via the
+    /// struct-overload directly; this no-arg version is kept as a convenience.
     @MainActor
     func applyUserSettings() async throws {
-        guard let appPreference = self.parent?.appPreference,
-              appPreference.useCustomDrawingSettings else {
-            logger.debug("Custom drawing settings not enabled, skipping apply")
-            return
-        }
-        
-        let settings = appPreference.customDrawingSettings
-        
+        guard let appPreference = self.parent?.appPreference else { return }
+        try await applyUserSettings(appPreference.customDrawingSettings)
+    }
+
+    /// Push an explicit `UserDrawingSettings` struct to the current canvas.
+    /// Excalidraw merges these into appState, so partial structs (Optional fields nil)
+    /// only update the populated keys.
+    @MainActor
+    func applyUserSettings(_ settings: UserDrawingSettings) async throws {
         guard let jsonString = settings.toJSONString() else {
             logger.error("Failed to convert settings to JSON string")
             return
         }
-        
+
         let js = "window.excalidrawZHelper?.applyUserSettings(\(jsonString)); 0;"
         _ = try await self.webView.evaluateJavaScript(js)
         self.logger.info("User settings applied successfully: \(jsonString)")
@@ -33,15 +35,17 @@ extension ExcalidrawCore {
     
     /// Fetch current drawing settings from Excalidraw
     /// Returns the current user drawing settings from the web view
+    /// Reads the canvas's drawing prefs from the JS helper. Returns an empty struct
+    /// when localStorage doesn't yet have an `excalidraw-state` entry (fresh install
+    /// / never-used domain) — the JS side returns `null` in that case.
     @MainActor
     func fetchCurrentUserSettings() async throws -> UserDrawingSettings {
         let js = "window.excalidrawZHelper?.getUserSettings()"
         let result = try await self.webView.evaluateJavaScript(js)
         guard let settingsDict = result as? [String: Any] else {
-            throw UserSettingsError.invalidResponse
+            return UserDrawingSettings()
         }
-        let settings = UserDrawingSettings.from(dict: settingsDict)
-        return settings
+        return UserDrawingSettings.from(dict: settingsDict)
     }
 }
 

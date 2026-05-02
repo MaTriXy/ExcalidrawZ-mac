@@ -21,7 +21,7 @@ struct DrawingSettingsPanel: View {
             SettingSection(title: String(localizable: .settingsExcalidrawDrawingSettingsStrokeTitle)) {
                 ColorButtonGroup(
                     colors: ColorPalette.strokeQuickPicks,
-                    selectedColor: settings.currentItemStrokeColor ?? "#1e1e1e"
+                    selectedColor: settings.currentItemStrokeColor ?? UserDrawingSettings.Defaults.strokeColor
                 ) { color in
                     settings.currentItemStrokeColor = color
                     onSettingsChange()
@@ -32,7 +32,7 @@ struct DrawingSettingsPanel: View {
             SettingSection(title: String(localizable: .settingsExcalidrawDrawingSettingsBackgroundTitle)) {
                 ColorButtonGroup(
                     colors: ColorPalette.backgroundQuickPicks,
-                    selectedColor: settings.currentItemBackgroundColor ?? "transparent"
+                    selectedColor: settings.currentItemBackgroundColor ?? UserDrawingSettings.Defaults.backgroundColor
                 ) { color in
                     settings.currentItemBackgroundColor = color
                     onSettingsChange()
@@ -43,7 +43,7 @@ struct DrawingSettingsPanel: View {
             SettingSection(title: String(localizable: .settingsExcalidrawDrawingSettingsFontFamilyTitle)) {
                 OptionButtonGroup(
                     options: [.handDrawn, .normal, .code],
-                    selectedValue: settings.currentItemFontFamily ?? .handDrawn
+                    selectedValue: settings.currentItemFontFamily ?? UserDrawingSettings.Defaults.fontFamily
                 ) { value in
                     settings.currentItemFontFamily = value
                     onSettingsChange()
@@ -63,7 +63,7 @@ struct DrawingSettingsPanel: View {
             SettingSection(title: String(localizable: .settingsExcalidrawDrawingSettingsFontSizeTitle)) {
                 OptionButtonGroup(
                     options: [16.0, 20.0, 28.0, 36.0],
-                    selectedValue: settings.currentItemFontSize ?? 20
+                    selectedValue: settings.currentItemFontSize ?? UserDrawingSettings.Defaults.fontSize
                 ) { value in
                     settings.currentItemFontSize = value
                     onSettingsChange()
@@ -87,7 +87,7 @@ struct DrawingSettingsPanel: View {
             SettingSection(title: String(localizable: .settingsExcalidrawDrawingSettingsTextAlignTitle)) {
                 OptionButtonGroup(
                     options: ["left", "center", "right"],
-                    selectedValue: settings.currentItemTextAlign ?? "left"
+                    selectedValue: settings.currentItemTextAlign ?? UserDrawingSettings.Defaults.textAlign
                 ) { value in
                     settings.currentItemTextAlign = value
                     onSettingsChange()
@@ -110,7 +110,7 @@ struct DrawingSettingsPanel: View {
                 SettingSection(title: String(localizable: .settingsExcalidrawDrawingSettingsFillTitle)) {
                     OptionButtonGroup(
                         options: [ExcalidrawFillStyle.hachure, ExcalidrawFillStyle.crossHatch, ExcalidrawFillStyle.solid],
-                        selectedValue: settings.currentItemFillStyle ?? .solid
+                        selectedValue: settings.currentItemFillStyle ?? UserDrawingSettings.Defaults.fillStyle
                     ) { value in
                         settings.currentItemFillStyle = value
                         onSettingsChange()
@@ -150,7 +150,7 @@ struct DrawingSettingsPanel: View {
             SettingSection(title: String(localizable: .settingsExcalidrawDrawingSettingsStrokeWidthTitle)) {
                 StrokeWidthPicker(
                     widths: [1, 2, 4],
-                    selectedWidth: settings.currentItemStrokeWidth ?? 2
+                    selectedWidth: settings.currentItemStrokeWidth ?? UserDrawingSettings.Defaults.strokeWidth
                 ) { width in
                     settings.currentItemStrokeWidth = width
                     onSettingsChange()
@@ -165,7 +165,7 @@ struct DrawingSettingsPanel: View {
                         ExcalidrawStrokeStyle.dashed,
                         ExcalidrawStrokeStyle.dotted
                     ],
-                    selectedValue: settings.currentItemStrokeStyle ?? .solid
+                    selectedValue: settings.currentItemStrokeStyle ?? UserDrawingSettings.Defaults.strokeStyle
                 ) { value in
                     settings.currentItemStrokeStyle = value
                     onSettingsChange()
@@ -185,7 +185,7 @@ struct DrawingSettingsPanel: View {
             SettingSection(title: String(localizable: .settingsExcalidrawDrawingSettingsSloppinessTitle)) {
                 OptionButtonGroup(
                     options: [0.0, 1.0, 2.0],
-                    selectedValue: settings.currentItemRoughness ?? 1
+                    selectedValue: settings.currentItemRoughness ?? UserDrawingSettings.Defaults.roughness
                 ) { value in
                     settings.currentItemRoughness = value
                     onSettingsChange()
@@ -210,7 +210,7 @@ struct DrawingSettingsPanel: View {
                         ExcalidrawStrokeSharpness.sharp,
                         ExcalidrawStrokeSharpness.round
                     ],
-                    selectedValue: settings.currentItemRoundness ?? .round
+                    selectedValue: settings.currentItemRoundness ?? UserDrawingSettings.Defaults.roundness
                 ) { value in
                     settings.currentItemRoundness = value
                     onSettingsChange()
@@ -242,7 +242,7 @@ struct DrawingSettingsPanel: View {
             SettingSection(title: String(localizable: .settingsExcalidrawDrawingSettingsStartArrowTypeTitle)) {
                 OptionButtonGroup(
                     options: [.sharp, .round, .elbow],
-                    selectedValue: settings.currentItemArrowType ?? .sharp
+                    selectedValue: settings.currentItemArrowType ?? UserDrawingSettings.Defaults.arrowType
                 ) { value in
                     settings.currentItemArrowType = value
                     onSettingsChange()

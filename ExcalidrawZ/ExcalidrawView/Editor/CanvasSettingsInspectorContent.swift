@@ -20,6 +20,11 @@ struct CanvasSettingsInspectorContent: View {
     /// Tool lock isn't part of canvas preferences — it's still driven by `toggleToolbarAction("Q")`.
     @State private var toolLockEnabled: Bool = false
 
+    /// UI-only override for the drawing-prefs section. When false, the "is customized"
+    /// state is purely derived from the canvas-vs-global comparison. User toggling the
+    /// switch ON sets this to true (sticky until reset / file switch).
+    @State private var customizeDrawingSettingsOverride: Bool = false
+
     var body: some View {
 #if os(macOS)
         if appPreference.inspectorLayout == .sidebar {
@@ -55,8 +60,17 @@ struct CanvasSettingsInspectorContent: View {
                 Divider()
 
                 plainToggles
+
+                Divider()
+
+                drawingPreferencesSection
             }
             .padding(16)
+        }
+        .onChange(of: fileState.currentActiveFile) { _ in
+            // New file → drop the manual override so the toggle reflects the new
+            // canvas's actual relationship to the global defaults.
+            customizeDrawingSettingsOverride = false
         }
     }
 
@@ -146,6 +160,86 @@ struct CanvasSettingsInspectorContent: View {
                 isOn: $canvasPrefs.isMidpointSnappingEnabled
             )
         }
+    }
+
+    // MARK: - Drawing Preferences
+
+    @ViewBuilder
+    private var drawingPreferencesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Drawing Preferences")
+                    .font(.headline)
+
+                Spacer()
+
+                Toggle(isOn: customizeDrawingSettingsBinding) {}
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+            }
+            Text(isCustomizingDrawingSettings
+                 ? "This canvas overrides the global defaults. Turn off to reset."
+                 : "Following the global defaults from Settings → Excalidraw.")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            DrawingSettingsPanel(
+                settings: drawingSettingsBinding,
+                onSettingsChange: {}
+            )
+            .disabled(!isCustomizingDrawingSettings)
+            .opacity(isCustomizingDrawingSettings ? 1 : 0.55)
+            .padding(.top, 4)
+        }
+    }
+
+    /// True when the toggle should appear ON. Either the user explicitly turned it on,
+    /// or the canvas's settings disagree with the global template.
+    private var isCustomizingDrawingSettings: Bool {
+        customizeDrawingSettingsOverride || !isFollowingGlobalDrawingSettings
+    }
+
+    /// Flipping OFF resets the canvas to the global template; flipping ON only unlocks
+    /// the panel — values stay where they were until the user actually edits.
+    private var customizeDrawingSettingsBinding: Binding<Bool> {
+        Binding(
+            get: { isCustomizingDrawingSettings },
+            set: { newValue in
+                if newValue {
+                    customizeDrawingSettingsOverride = true
+                } else {
+                    resetDrawingSettingsToGlobal()
+                }
+            }
+        )
+    }
+
+    /// Comparison happens after both sides are filled with UI defaults — same lens the
+    /// Settings panel applies — so a stored nil and the rendered default count as equal.
+    private var isFollowingGlobalDrawingSettings: Bool {
+        canvasPrefs.drawingSettings.settings.matches(
+            template: appPreference.customDrawingSettings
+        )
+    }
+
+    private var drawingSettingsBinding: Binding<UserDrawingSettings> {
+        Binding(
+            get: { canvasPrefs.drawingSettings.settings },
+            set: { canvasPrefs.drawingSettings.settings = $0 }
+        )
+    }
+
+    /// Make the canvas look identical to the global view — fields global has set win,
+    /// the rest fall back to the same UI defaults the Settings panel renders. Without
+    /// the `filling(defaults:)` step, canvas-only divergence (e.g. a fontSize the user
+    /// picked via Excalidraw) would survive reset and leave the inspector saying
+    /// "customized" even after the user asked to follow global.
+    private func resetDrawingSettingsToGlobal() {
+        canvasPrefs.drawingSettings.settings = appPreference.customDrawingSettings
+            .filling(defaults: .uiDefaults)
+        customizeDrawingSettingsOverride = false
     }
 
     @ViewBuilder

@@ -157,7 +157,7 @@ struct ArrowheadPicker: View {
         Button(action: {
             showFullPicker.toggle()
         }) {
-            ArrowheadButtonLabel(arrowhead: selectedArrowhead ?? (direction == .end ? .value(.arrow) : .null))
+            ArrowheadButtonLabel(arrowhead: selectedArrowhead ?? (direction == .end ? UserDrawingSettings.Defaults.endArrowhead : UserDrawingSettings.Defaults.startArrowhead))
                 .scaleEffect(x: direction == .start ? 1 : -1)
                 .overlay(
                     RoundedRectangle(cornerRadius: 6)
