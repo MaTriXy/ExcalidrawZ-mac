@@ -224,6 +224,8 @@ struct LibraryView: View {
     
     @State private var inSelectionMode: Bool = false
     @State private var selectedItems = Set<LibraryItem>()
+
+    @State private var searchQuery: String = ""
     
     var body: some View {
         ZStack {
@@ -284,12 +286,16 @@ struct LibraryView: View {
 #endif
             } else {
                 VStack(spacing: 0) {
-                    
+//                    searchField
+//                        .padding(.horizontal, 10)
+//                        .padding(.top, 8)
+//                        .padding(.bottom, 4)
+
                     scrollContent()
                         .readSize($scrollViewSize)
-                    
+
                     Divider()
-                    
+
                     bottomBar()
 #if os(iOS)
                         .padding(.vertical, 8)
@@ -304,30 +310,62 @@ struct LibraryView: View {
             }
         }
     }
+
+    @MainActor @ViewBuilder
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemSymbol: .magnifyingglass)
+                .foregroundStyle(.secondary)
+            TextField("Filter library items...", text: $searchQuery)
+                .textFieldStyle(.plain)
+            if !searchQuery.isEmpty {
+                Button {
+                    searchQuery = ""
+                } label: {
+                    Image(systemSymbol: .xmarkCircleFill)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background {
+            Capsule()
+                .fill(.regularMaterial)
+        }
+    }
     
 #if os(iOS)
     @MainActor @ViewBuilder
     private func compactContent() -> some View {
         NavigationStack {
-            scrollContent()
-                .readSize($scrollViewSize)
-                .navigationTitle(.localizable(.librariesTitle))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigation) {
-                        ToolbarDismissButton()
-                    }
-                    
-                    ToolbarItem(placement: .automatic) {
-                        if inSelectionMode {
-                            ToolbarDoneButton {
-                                inSelectionMode.toggle()
-                            }
-                        } else {
-                            bottomBarMenu()
+            VStack(spacing: 0) {
+                searchField
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
+
+                scrollContent()
+                    .readSize($scrollViewSize)
+            }
+            .navigationTitle(.localizable(.librariesTitle))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigation) {
+                    ToolbarDismissButton()
+                }
+
+                ToolbarItem(placement: .automatic) {
+                    if inSelectionMode {
+                        ToolbarDoneButton {
+                            inSelectionMode.toggle()
                         }
+                    } else {
+                        bottomBarMenu()
                     }
                 }
+            }
         }
     }
 #endif
@@ -376,7 +414,8 @@ struct LibraryView: View {
                     LibrarySectionContent(
                         allLibraries: libraries,
                         library: library,
-                        selections: inSelectionMode ? $selectedItems : nil
+                        selections: inSelectionMode ? $selectedItems : nil,
+                        searchQuery: searchQuery
                     )
                 }
                 

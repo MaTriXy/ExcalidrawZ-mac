@@ -71,7 +71,7 @@ struct FileCheckpointRowView<Checkpoint: FileCheckpointRepresentable>: View {
                 Spacer()
             }
         
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 0) {
                     if let file {
                         if #available(macOS 13.0, iOS 16.0, *) {

@@ -32,6 +32,8 @@ struct SearchExcalidrawAction {
 
 
 struct SearchableModifier: ViewModifier {
+    @EnvironmentObject private var fileState: FileState
+    
     @State private var isSearchSheetPresented = false
     
     func body(content: Content) -> some View {
@@ -41,7 +43,12 @@ struct SearchableModifier: ViewModifier {
                     isSearchSheetPresented.toggle()
                 } label: { }
                     .opacity(0.01)
-                    .keyboardShortcut("f", modifiers: .command)
+                    .keyboardShortcut("f", modifiers: [.command, .shift])
+                Button {
+                    isSearchSheetPresented.toggle()
+                } label: { }
+                    .opacity(0.01)
+                    .keyboardShortcut("f", modifiers: fileState.currentActiveFile == nil ? [.command] : [.command, .shift])
                 
                 if #available(macOS 14.0, *) { } else {
                     Button {

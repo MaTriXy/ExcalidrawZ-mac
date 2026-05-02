@@ -24,7 +24,7 @@ struct ExcalidrawTrailingControls: View {
     }
 
     var body: some View {
-        if containerHorizontalSizeClass != .compact {
+        if containerHorizontalSizeClass != .compact, fileState.currentActiveFile != nil {
             VStack(alignment: .trailing, spacing: 10) {
                 InspectorTabButton(
                     tab: .preference,
@@ -37,6 +37,7 @@ struct ExcalidrawTrailingControls: View {
                     icon: .magnifyingglass,
                     title: "Search"
                 )
+                .keyboardShortcut("f", modifiers: .command)
 
                 InspectorTabButton(
                     tab: .library,
