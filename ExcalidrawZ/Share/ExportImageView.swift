@@ -347,11 +347,14 @@ struct ExportImageView: View {
             }
 
             HStack {
-                Text("Scale")
+                Text(localizable: .exportImageScaleTitle)
 
                 Spacer(minLength: 0)
 
-                Picker("Scale", selection: $exportScale) {
+                Picker(
+                    .localizable(.exportImageScaleTitle),
+                    selection: $exportScale
+                ) {
                     Text("1x").tag(1)
                     Text("2x").tag(2)
                     Text("3x").tag(3)

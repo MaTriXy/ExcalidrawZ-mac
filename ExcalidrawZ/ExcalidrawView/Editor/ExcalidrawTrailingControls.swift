@@ -29,13 +29,13 @@ struct ExcalidrawTrailingControls: View {
                 InspectorTabButton(
                     tab: .preference,
                     icon: .sliderHorizontal3,
-                    title: "Preference"
+                    title: String(localizable: .canvasPreferencesTitle)
                 )
 
                 InspectorTabButton(
                     tab: .search,
                     icon: .magnifyingglass,
-                    title: "Search"
+                    title: String(localizable: .searchButtonTitle)
                 )
                 .keyboardShortcut("f", modifiers: .command)
 

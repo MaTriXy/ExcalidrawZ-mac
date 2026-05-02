@@ -11,17 +11,33 @@ extension WhatsNewView {
     @MainActor @ViewBuilder
     func featuresContent() -> some View {
         WhatsNewFeatureRow(
-            title: .localizable(.whatsNewUpdateExcalidrawCoreTitle),
-            description: .localizable(.whatsNewBetterDarkModeDescription),
-        ) {
-            ExcalidrawIconView()
-                .frame(height: 36)
-        }
-        
+            title: .localizable(.whatsNewTabbedInspectorTitle),
+            description: .localizable(.whatsNewTabbedInspectorDescription),
+            icon: Image(systemSymbol: .sidebarRight)
+        )
+
         WhatsNewFeatureRow(
-            title: .localizable(.whatsNewReducedAppSizeTitle),
-            description: .localizable(.whatsNewReducedAppSizeDescription),
-            icon: Image(systemSymbol: .externaldrive)
+            title: .localizable(.whatsNewCanvasSearchTitle),
+            description: .localizable(.whatsNewCanvasSearchDescription),
+            icon: Image(systemSymbol: .magnifyingglass)
+        )
+
+        WhatsNewFeatureRow(
+            title: .localizable(.whatsNewCanvasPreferencesTitle),
+            description: .localizable(.whatsNewCanvasPreferencesDescription),
+            icon: Image(systemSymbol: .sliderHorizontal3)
+        )
+
+        WhatsNewFeatureRow(
+            title: .localizable(.whatsNewLassoToolTitle),
+            description: .localizable(.whatsNewLassoToolDescription),
+            icon: Image(systemSymbol: .selectionPinInOut)
+        )
+
+        WhatsNewFeatureRow(
+            title: .localizable(.whatsNewLibraryItemSearchTitle),
+            description: .localizable(.whatsNewLibraryItemSearchDescription),
+            icon: Image(systemSymbol: .book)
         )
     }
     
@@ -51,6 +67,27 @@ extension WhatsNewView {
                         version: Bundle.main.infoDictionary!["CFBundleShortVersionString"] as! String
                     ) {
                         featuresContent()
+                    }
+                    
+                    // MARK: - v1.7.3
+                    WhatsNewVersionSection(version: "v1.7.3") {
+                        WhatsNewFeatureRow(
+                            title: .localizable(.whatsNewUpdateExcalidrawCoreTitle),
+                            description: .localizable(.whatsNewBetterDarkModeDescription),
+                        ) {
+                            ExcalidrawIconView()
+                                .frame(height: 36)
+                        }
+
+                        WhatsNewFeatureRow(
+                            title: .localizable(.whatsNewReducedAppSizeTitle),
+                            description: .localizable(
+                                .whatsNewReducedAppSizeDescription(
+                                    Decimal(0.3).formatted(.percent.precision(.fractionLength(0)))
+                                )
+                            ),
+                            icon: Image(systemSymbol: .externaldrive)
+                        )
                     }
                     
                     // MARK: - v1.7.0

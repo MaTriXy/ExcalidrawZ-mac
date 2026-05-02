@@ -30,7 +30,7 @@ struct SearchInspectorContent: View {
             content()
                 .toolbar {
                     InspectorHeaderToolbar(
-                        title: "Search",
+                        title: String(localizable: .searchButtonTitle),
                         isInspectorPresented: layoutState.isInspectorPresented
                     )
                 }
@@ -67,7 +67,7 @@ struct SearchInspectorContent: View {
         HStack(spacing: 8) {
             Image(systemSymbol: .magnifyingglass)
                 .foregroundStyle(.secondary)
-            TextField("Search canvas...", text: $query)
+            TextField("", text: $query, prompt: Text(localizable: .canvasSearchFieldPrompt))
                 .textFieldStyle(.plain)
                 .onSubmit {
                     advanceSelection()
@@ -152,7 +152,11 @@ struct SearchInspectorContent: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(caseSensitive ? "Case sensitive (on)" : "Case sensitive (off)")
+        .help(
+            caseSensitive
+            ? String(localizable: .canvasSearchCaseSensitiveOn)
+            : String(localizable: .canvasSearchCaseSensitiveOff)
+        )
     }
 
     private var navigationLabel: String {
@@ -168,9 +172,9 @@ struct SearchInspectorContent: View {
     @ViewBuilder
     private var resultsList: some View {
         if query.isEmpty {
-            emptyHint("Type to search elements on the canvas.")
+            emptyHint(String(localizable: .canvasSearchResultsQueryEmptyHint))
         } else if results.isEmpty {
-            emptyHint("No results")
+            emptyHint(String(localizable: .canvasSearchResultsResultsEmptyHint))
         } else {
             ScrollViewReader { proxy in
                 ScrollView {

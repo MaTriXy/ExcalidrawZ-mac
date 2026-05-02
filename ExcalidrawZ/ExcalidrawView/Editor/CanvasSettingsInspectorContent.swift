@@ -26,7 +26,7 @@ struct CanvasSettingsInspectorContent: View {
             content()
                 .toolbar {
                     InspectorHeaderToolbar(
-                        title: "Preference",
+                        title: String(localizable: .canvasPreferencesTitle),
                         isInspectorPresented: layoutState.isInspectorPresented
                     )
                 }
@@ -63,7 +63,7 @@ struct CanvasSettingsInspectorContent: View {
     @ViewBuilder
     private var canvasBackgroundRow: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Canvas background")
+            Text(localizable: .canvasPreferencesCanvasBackgroundTitle)
             ColorButtonGroup(
                 colors: ColorPalette.canvasBackgroundQuickPicks,
                 selectedColor: canvasPrefs.viewBackgroundColor
@@ -76,11 +76,18 @@ struct CanvasSettingsInspectorContent: View {
     @ViewBuilder
     private var selectModeRow: some View {
         HStack {
-            Text("Select on")
+            Text(localizable: .canvasPreferencesSelectOnTitle)
             Spacer()
-            Picker("Select on", selection: $canvasPrefs.boxSelectionMode) {
-                Text("Wrap").tag(CanvasPreferencesState.BoxSelectionMode.contain)
-                Text("Overlap").tag(CanvasPreferencesState.BoxSelectionMode.overlap)
+            Picker(
+                String(localizable: .canvasPreferencesSelectOnTitle),
+                selection: $canvasPrefs.boxSelectionMode
+            ) {
+                Text(
+                    localizable: .canvasPreferencesSelectOnOptionWrap
+                ).tag(CanvasPreferencesState.BoxSelectionMode.contain)
+                Text(
+                    localizable: .canvasPreferencesSelectOnOptionOverlap
+                ).tag(CanvasPreferencesState.BoxSelectionMode.overlap)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -92,20 +99,52 @@ struct CanvasSettingsInspectorContent: View {
     @ViewBuilder
     private var shortcutToggles: some View {
         VStack(alignment: .leading, spacing: 8) {
-            toggleRow("Tool lock", shortcut: "Q", isOn: toolLockBinding)
-            toggleRow("Stick to objects", shortcut: "⌥S", isOn: $canvasPrefs.objectsSnapModeEnabled)
-            toggleRow("Toggle grid", shortcut: "⌘'", isOn: $canvasPrefs.gridModeEnabled)
-            toggleRow("Zen mode", shortcut: "⌥Z", isOn: $canvasPrefs.zenModeEnabled)
-            toggleRow("View mode", shortcut: "⌥R", isOn: $canvasPrefs.viewModeEnabled)
-            toggleRow("Canvas & shape properties", shortcut: "⌥/", isOn: $canvasPrefs.stats)
+            toggleRow(
+                String(localizable: .canvasPreferencesToolLockTitle),
+                shortcut: "Q",
+                isOn: toolLockBinding
+            )
+            toggleRow(
+                String(localizable: .canvasPreferencesSnapToMidpointsTitle),
+                shortcut: "⌥S",
+                isOn: $canvasPrefs.objectsSnapModeEnabled
+            )
+            toggleRow(
+                String(localizable: .canvasPreferencesToggleGridTitle),
+                shortcut: "⌘'",
+                isOn: $canvasPrefs.gridModeEnabled
+            )
+            toggleRow(
+                String(localizable: .canvasPreferencesZenModeTitle),
+                shortcut: "⌥Z",
+                isOn: $canvasPrefs.zenModeEnabled
+            )
+            toggleRow(
+                String(localizable: .canvasPreferencesViewModeTitle),
+                shortcut: "⌥R",
+                isOn: $canvasPrefs.viewModeEnabled
+            )
+            toggleRow(
+                String(localizable: .canvasPreferencesStatesTitle),
+                shortcut: "⌥/",
+                isOn: $canvasPrefs.stats
+            )
         }
     }
 
     @ViewBuilder
     private var plainToggles: some View {
         VStack(alignment: .leading, spacing: 8) {
-            toggleRow("Arrow binding", shortcut: nil, isOn: bindingPreferenceBinding)
-            toggleRow("Snap to midpoints", shortcut: nil, isOn: $canvasPrefs.isMidpointSnappingEnabled)
+            toggleRow(
+                String(localizable: .canvasPreferencesArrowBindingTitle),
+                shortcut: nil,
+                isOn: bindingPreferenceBinding
+            )
+            toggleRow(
+                String(localizable: .canvasPreferencesSnapToMidpointsTitle),
+                shortcut: nil,
+                isOn: $canvasPrefs.isMidpointSnappingEnabled
+            )
         }
     }
 
