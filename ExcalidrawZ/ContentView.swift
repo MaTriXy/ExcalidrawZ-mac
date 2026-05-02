@@ -31,6 +31,7 @@ struct ContentView: View {
     @StateObject private var exportState = ExportState()
     @StateObject private var layoutState = LayoutState()
     @StateObject private var shareFileState = ShareFileState()
+    @StateObject private var canvasPreferencesState = CanvasPreferencesState()
 
 #if canImport(AppKit)
     @State private var window: NSWindow?
@@ -61,6 +62,7 @@ struct ContentView: View {
             .environmentObject(exportState)
             .environmentObject(layoutState)
             .environmentObject(shareFileState)
+            .environmentObject(canvasPreferencesState)
             .modifier(DragStateModifier())
             .modifier(StartupSyncModifier())
             .modifier(CoreDataMigrationModifier())
@@ -76,6 +78,12 @@ struct ContentView: View {
             .onReceive(NotificationCenter.default.publisher(for: .toggleInspector)) { notification in
                 handleToggleInspector(notification)
             }
+            .onChange(of: fileState.currentActiveFile) { newValue in
+                // Going back to Home: nothing to inspect, so collapse the panel.
+                if newValue == nil, layoutState.isInspectorPresented {
+                    layoutState.isInspectorPresented = false
+                }
+            }
             .withContainerSize()
             .task { await prepare() }
     }
@@ -85,7 +93,7 @@ struct ContentView: View {
         ZStack {
             if horizontalSizeClass == .regular {
                 contentView()
-                    .modifier(LibraryTrailingSidebarModifier())
+                    .modifier(InspectorPresentationModifier())
             } else {
                 // Compact uses TabView, can not use library here.
                 contentView()
@@ -121,7 +129,7 @@ struct ContentView: View {
     }
     private func handleToggleInspector(_ notification: Notification) {
         guard window?.isKeyWindow == true else { return }
-        layoutState.isInspectorPresented.toggle()
+        layoutState.toggleInspector()
     }
     
     // Check if it is first launch by checking the files count.

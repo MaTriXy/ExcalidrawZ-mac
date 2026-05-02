@@ -73,7 +73,7 @@ struct CollaborationRoomItemView: View {
     
     var room: CollaborationFile
 
-    var collaboratingState: ExcalidrawView.LoadingState? {
+    var collaboratingState: ExcalidrawCanvasView.LoadingState? {
         fileState.collaboratingFilesState[room]
     }
     var stateIndicatorColor: Color {

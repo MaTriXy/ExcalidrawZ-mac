@@ -21,10 +21,10 @@ struct ContentViewDetail: View {
     @Binding var isSettingsPresented: Bool
     
     @StateObject private var toolState = ToolState()
-    
+
     var body: some View {
         splitViewsContent()
-            .modifier(ExcalidrawContainerToolbarContentModifier())
+            .modifier(ExcalidrawEditorToolbarModifier())
 #if os(iOS)
             .modifier(ApplePencilToolbarModifier())
 #endif
@@ -73,7 +73,7 @@ struct ExcalidrawSplitViewsContainer: View {
 //                fileState.activeFiles.removeAll(where: {$0?.id == file?.id})
 //            }
 //        } subView: { activeFile in
-//            ExcalidrawContainerWrapper(activeFile: activeFile)
+//            ExcalidrawEditor(activeFile: activeFile)
 //                .modifier(FileHomeItemTransitionModifier())
 //        }
     }

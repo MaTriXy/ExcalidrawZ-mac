@@ -303,7 +303,7 @@ final class FileState: ObservableObject {
     
     /// Files that is currently under collaboration.
     @Published var collaboratingFiles: [CollaborationFile] = []
-    @Published var collaboratingFilesState: [CollaborationFile : ExcalidrawView.LoadingState] = [:]
+    @Published var collaboratingFilesState: [CollaborationFile : ExcalidrawCanvasView.LoadingState] = [:]
     @Published var collaborators: [CollaborationFile : [Collaborator]] = [:]
     enum CollborationRoute: Hashable {
         case home
@@ -329,8 +329,8 @@ final class FileState: ObservableObject {
     
     @AppStorage("ExcalidrawFileSortField") var sortField: ExcalidrawFileSortField = .updatedAt
     
-    var excalidrawWebCoordinator: ExcalidrawView.Coordinator?
-    var excalidrawCollaborationWebCoordinator: ExcalidrawView.Coordinator?
+    var excalidrawWebCoordinator: ExcalidrawCanvasView.Coordinator?
+    var excalidrawCollaborationWebCoordinator: ExcalidrawCanvasView.Coordinator?
     
     var shouldIgnoreUpdate = true
     /// Indicate the file is being updated after being set as current file.

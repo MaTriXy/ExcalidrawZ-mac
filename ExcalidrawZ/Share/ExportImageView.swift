@@ -13,6 +13,8 @@ import WebKit
 struct ExportImageView: View {
 #if canImport(AppKit)
     typealias PlatformImage = NSImage
+    private let macOSPreviewSectionHeight: CGFloat = 160
+    private let macOSActionsSectionHeight: CGFloat = 36
 #elseif canImport(UIKit)
     typealias PlatformImage = UIImage
 #endif
@@ -58,11 +60,13 @@ struct ExportImageView: View {
     @State private var fileName: String
     @State private var copied: Bool = false
     @State private var hasError: Bool = false
+    @State private var latestExportRequestID = UUID()
 
     @State private var keepEditable = false
     @State private var exportWithBackground = true
     @State private var imageType: Int = 0
     @State private var exportColorScheme: ColorScheme = .light
+    @State private var exportScale: Int = 1
     
     var exportType: UTType {
         switch imageType {
@@ -96,6 +100,9 @@ struct ExportImageView: View {
         .onChange(of: imageType) { newValue in
             exportImageData()
         }
+        .onChange(of: exportScale) { _ in
+            exportImageData(initial: true)
+        }
         .onChange(of: exportColorScheme) { _ in
             exportImageData(initial: true)
         }
@@ -115,24 +122,19 @@ struct ExportImageView: View {
     
     @MainActor @ViewBuilder
     private var content: some View {
-        VStack {
-            if let image, let exportedImageData {
-                thumbnailView(image, url: exportedImageData.url)
-                fileInfoView
+        VStack(spacing: 16) {
+            previewSection
+            fileInfoView
+
+            if let exportedImageData {
                 actionsView(exportedImageData.url)
-            } else if hasError {
+            } else {
+                actionsPlaceholderView
+            }
+
+            if hasError {
                 Text(localizable: .exportImageLoadingError)
                     .foregroundColor(.red)
-            } else {
-                ProgressView()
-                Text(localizable: .generalLoading)
-                
-                Button {
-                    dismiss()
-                } label: {
-                    Text(localizable: .exportImageLoadingButtonCancel)
-                }
-                .offset(y: 40)
             }
         }
         .onDisappear {
@@ -153,40 +155,22 @@ struct ExportImageView: View {
                 Section {
                     exportImageSettingItems()
                 } header: {
-                    if let image, let exportedImageData {
-                        VStack {
-                            thumbnailView(image, url: exportedImageData.url)
-                                .frame(height: 200)
-                                .padding(.vertical)
-                            imageNameField()
+                    VStack {
+                        previewSection
+                            .frame(height: 200)
+                            .padding(.vertical)
+                        imageNameField()
+
+                        if hasError && exportedImageData == nil {
+                            Text(.localizable(.exportImageLoadingError))
+                                .foregroundColor(.red)
                         }
-                    } else if hasError {
-                        Text(.localizable(.exportImageLoadingError))
-                            .foregroundColor(.red)
-                    } else {
-                        VStack {
-                            ProgressView()
-                            Text(localizable: .generalLoading)
-                        }
-                        .frame(height: 274)
-                        .frame(maxWidth: .infinity)
                     }
                 } footer: {
                     if let exportedImageData {
-                        if containerHorizontalSizeClass == .compact {
-                            VStack {
-                                actionItems(exportedImageData.url)
-                            }
-                            .modernButtonStyle(style: .glass)
-                        } else {
-                            HStack {
-                                Spacer()
-                                HStack {
-                                    actionItems(exportedImageData.url)
-                                }
-                                .modernButtonStyle(style: .glass)
-                            }
-                        }
+                        actionsFooterView(url: exportedImageData.url)
+                    } else {
+                        actionsFooterPlaceholderView
                     }
                 }
             }
@@ -230,6 +214,41 @@ struct ExportImageView: View {
             }
 #endif
 
+    }
+
+    @MainActor @ViewBuilder
+    private var previewSection: some View {
+        ZStack {
+#if os(macOS)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.secondary.opacity(0.08))
+                .frame(width: 220, height: 140)
+#else
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.secondary.opacity(0.08))
+#endif
+
+            if let image, let exportedImageData {
+                thumbnailView(image, url: exportedImageData.url)
+            } else {
+                VStack(spacing: 8) {
+                    ProgressView()
+                    Text(localizable: .generalLoading)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .overlay {
+            if loadingImage, image != nil, exportedImageData != nil {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(.regularMaterial.opacity(0.85))
+
+                ProgressView()
+            }
+        }
+#if os(macOS)
+        .frame(height: macOSPreviewSectionHeight)
+#endif
     }
     
     @MainActor @ViewBuilder
@@ -302,30 +321,50 @@ struct ExportImageView: View {
     
     @MainActor @ViewBuilder
     private func exportImageSettingItems() -> some View {
-        Picker(.localizable(.exportImagePickerColorSchemeLabel), selection: $exportColorScheme) {
-            Text(.localizable(.generalColorSchemeLight)).tag(ColorScheme.light)
-            Text(.localizable(.generalColorSchemeDark)).tag(ColorScheme.dark)
-        }
-//#if os(iOS)
-//        .pickerStyle(.segmented)
-//#endif
-        .disabled(exportType != .png)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Picker(.localizable(.exportImagePickerColorSchemeLabel), selection: $exportColorScheme) {
+                    Text(.localizable(.generalColorSchemeLight)).tag(ColorScheme.light)
+                    Text(.localizable(.generalColorSchemeDark)).tag(ColorScheme.dark)
+                }
+                .disabled(exportType != .png)
 
 #if os(macOS)
-        Toggle(.localizable(.exportImageToggleWithBackground), isOn: $exportWithBackground)
-            .toggleStyle(.checkboxStyle)
+                Toggle(.localizable(.exportImageToggleWithBackground), isOn: $exportWithBackground)
+                    .toggleStyle(.checkboxStyle)
 #elseif os(iOS)
-        Toggle(.localizable(.exportImageToggleWithBackground), isOn: $exportWithBackground)
-            .toggleStyle(.switch)
+                Toggle(.localizable(.exportImageToggleWithBackground), isOn: $exportWithBackground)
+                    .toggleStyle(.switch)
 #endif
-        
+            
 #if os(macOS)
-        Toggle(.localizable(.exportImageToggleEditable), isOn: $keepEditable)
-            .toggleStyle(.checkboxStyle)
+                Toggle(.localizable(.exportImageToggleEditable), isOn: $keepEditable)
+                    .toggleStyle(.checkboxStyle)
 #elseif os(iOS)
-        Toggle(.localizable(.exportImageToggleEditable), isOn: $keepEditable)
-            .toggleStyle(.switch)
+                Toggle(.localizable(.exportImageToggleEditable), isOn: $keepEditable)
+                    .toggleStyle(.switch)
 #endif
+            }
+
+            HStack {
+                Text(localizable: .exportImageScaleTitle)
+
+                Spacer(minLength: 0)
+
+                Picker(
+                    .localizable(.exportImageScaleTitle),
+                    selection: $exportScale
+                ) {
+                    Text("1x").tag(1)
+                    Text("2x").tag(2)
+                    Text("3x").tag(3)
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .modernButtonStyle(style: .glass, shape: .capsule)
+                .disabled(exportType != .png)
+            }
+        }
     }
     
     @ViewBuilder
@@ -334,7 +373,95 @@ struct ExportImageView: View {
             actionItems(url)
         }
         .modernButtonStyle(size: .regular, shape: .modern)
-        
+#if os(macOS)
+        .frame(height: macOSActionsSectionHeight)
+#endif
+    }
+
+    @MainActor @ViewBuilder
+    private var actionsPlaceholderView: some View {
+        HStack {
+            if #available(macOS 13.0, iOS 16.0, *) {
+                Label(.localizable(.exportActionCopy), systemSymbol: .clipboard)
+                    .padding(.horizontal, 6)
+            } else {
+                Label(.localizable(.exportActionCopy), systemSymbol: .docOnClipboard)
+                    .padding(.horizontal, 6)
+            }
+
+            Label(.localizable(.exportActionSave), systemSymbol: .squareAndArrowDown)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 1)
+
+            Label(.localizable(.exportActionShare), systemSymbol: .squareAndArrowUp)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 1)
+        }
+        .opacity(0.5)
+        .modernButtonStyle(size: .regular, shape: .modern)
+        .disabled(true)
+#if os(macOS)
+        .frame(height: macOSActionsSectionHeight)
+#endif
+    }
+
+    @MainActor @ViewBuilder
+    private func actionsFooterView(url: URL) -> some View {
+        if containerHorizontalSizeClass == .compact {
+            VStack {
+                actionItems(url)
+            }
+            .modernButtonStyle(style: .glass)
+        } else {
+            HStack {
+                Spacer()
+                HStack {
+                    actionItems(url)
+                }
+                .modernButtonStyle(style: .glass)
+            }
+        }
+    }
+
+    @MainActor @ViewBuilder
+    private var actionsFooterPlaceholderView: some View {
+        if containerHorizontalSizeClass == .compact {
+            VStack {
+                actionsPlaceholderItems
+            }
+            .modernButtonStyle(style: .glass)
+        } else {
+            HStack {
+                Spacer()
+                HStack {
+                    actionsPlaceholderItems
+                }
+                .modernButtonStyle(style: .glass)
+            }
+        }
+    }
+
+    @MainActor @ViewBuilder
+    private var actionsPlaceholderItems: some View {
+        if #available(macOS 13.0, iOS 16.0, *) {
+            Label(.localizable(.exportActionCopy), systemSymbol: .clipboard)
+                .padding(.horizontal, 6)
+                .frame(maxWidth: containerHorizontalSizeClass == .compact ? .infinity : nil)
+        } else {
+            Label(.localizable(.exportActionCopy), systemSymbol: .docOnClipboard)
+                .padding(.horizontal, 6)
+                .frame(maxWidth: containerHorizontalSizeClass == .compact ? .infinity : nil)
+        }
+
+        Label(.localizable(.exportActionSave), systemSymbol: .squareAndArrowDown)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 1)
+            .frame(maxWidth: containerHorizontalSizeClass == .compact ? .infinity : nil)
+
+        Label(.localizable(.exportActionShare), systemSymbol: .squareAndArrowUp)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 1)
+            .frame(maxWidth: containerHorizontalSizeClass == .compact ? .infinity : nil)
     }
     
     @MainActor @ViewBuilder
@@ -453,26 +580,32 @@ struct ExportImageView: View {
     
     private func exportImageData(initial: Bool = false) {
         let exportName = self.fileName.isEmpty ? self.baseFileName : self.fileName
+        let requestID = UUID()
         Task.detached {
             do {
+                await MainActor.run {
+                    latestExportRequestID = requestID
+                    loadingImage = true
+                    hasError = false
+                }
+
                 if initial {
-                    await MainActor.run {
-                        self.image = nil
-                        self.exportedImageData = nil
-                    }
                     let imageData = try await exportState.exportExcalidrawElementsToImage(
                         elements: self.elements,
                         type: .png,
                         name: exportName,
                         embedScene: false,
                         withBackground: self.exportWithBackground,
-                        colorScheme: self.exportColorScheme
+                        colorScheme: self.exportColorScheme,
+                        exportScale: self.exportScale
                     )
                     await MainActor.run {
+                        guard latestExportRequestID == requestID else { return }
                         self.image = PlatformImage(data: imageData.data)?
                             .resizeWhileMaintainingAspectRatioToSize(size: .init(width: 200, height: 120))
                         self.exportedImageData = imageData
                         self.fileName = imageData.name
+                        self.loadingImage = false
                     }
                 } else {
                     let imageData = try await exportState.exportExcalidrawElementsToImage(
@@ -481,13 +614,21 @@ struct ExportImageView: View {
                         name: exportName,
                         embedScene: self.keepEditable,
                         withBackground: self.exportWithBackground,
-                        colorScheme: self.exportColorScheme
+                        colorScheme: self.exportColorScheme,
+                        exportScale: self.exportScale
                     )
                     await MainActor.run {
+                        guard latestExportRequestID == requestID else { return }
                         self.exportedImageData = imageData
+                        self.loadingImage = false
                     }
                 }
             } catch {
+                await MainActor.run {
+                    guard latestExportRequestID == requestID else { return }
+                    self.loadingImage = false
+                    self.hasError = self.exportedImageData == nil
+                }
                 await alertToast(error)
             }
         }

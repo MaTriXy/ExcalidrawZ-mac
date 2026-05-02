@@ -33,7 +33,7 @@ struct CollaborationFileRow: View {
         }
     }
     var isInCollaboration: Bool { fileState.collaboratingFiles.contains(where: {$0 == file}) }
-    var collaboratingState: ExcalidrawView.LoadingState? {
+    var collaboratingState: ExcalidrawCanvasView.LoadingState? {
         fileState.collaboratingFilesState[file]
     }
     var stateIndicatorColor: Color {

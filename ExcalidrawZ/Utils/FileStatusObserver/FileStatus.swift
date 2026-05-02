@@ -34,7 +34,7 @@ enum FileSyncStatus: Equatable, CustomStringConvertible {
             case .synced: return String(localizable: .fileStatusDescriptionSynced)
             case .uploading: return String(localizable: .fileStatusDescriptionUploading)
             case .downloading(let progress):
-                return String(localizable: .fileStatusDescriptionDownloading(progress))
+                return String(localizable: .fileStatusDescriptionDownloading(progress.formatted(.percent.precision(.fractionLength(2)))))
             case .needsUpload: return String(localizable: .fileStatusDescriptionNeedsUpload)
             case .needsDownload: return String(localizable: .fileStatusDescriptionNeedsDownload)
             case .queued(let op):

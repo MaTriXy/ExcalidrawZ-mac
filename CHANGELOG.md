@@ -1,3 +1,28 @@
+## 1.7.4
+
+#### Features
+
+- Tabbed inspector with Library, History, Search, and Canvas Preferences.
+- Canvas search with in-canvas highlights and keyboard navigation.
+- Canvas Preferences — per-canvas overrides for grid, zen, view mode, snapping, theme, background, selection tool, and drawing defaults.
+- Lasso selection tool.
+- In-app library browser — import directly from libraries.excalidraw.com without leaving the app.
+- Filter and rename library items.
+- Choose 1x / 2x / 3x scale on image export.
+
+#### Optimizations
+
+- Faster file switching — the Excalidraw scene is awaited before sync.
+- Image and SVG exports use a direct return path instead of the old id-based round-trip.
+- Drawing preferences are read from each file's appState, avoiding stale values from the previous file.
+- Inspector auto-collapses when returning to Home.
+
+#### Bug fixed
+
+- Canvas and drawing preferences not refreshing on file switch.
+- Race that could cause `setAvailableFonts` to run before the helper was ready.
+- New/empty files misreported as "Customized" due to inherited `currentItem*` defaults.
+
 ## 1.7.3
 
 #### Optimizations
@@ -10,8 +35,6 @@
 - Fixed import failures from the menu bar not presenting a clear error to the user.
 - Fixed automatic update preference not persisting correctly across app launches.
 - Improved decoding compatibility for Excalidraw linear elements with missing fields.
-
-### 
 
 ## 1.7.2
 

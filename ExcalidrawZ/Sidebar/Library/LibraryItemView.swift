@@ -35,6 +35,8 @@ struct LibraryItemView: View {
     }
     
     @State private var isDeleteConfirmPresented = false
+    @State private var isEditPresented = false
+    @State private var editedName: String = ""
 
     var body: some View {
 #if os(macOS)
@@ -76,6 +78,11 @@ struct LibraryItemView: View {
             } message: {
                 Text(.localizable(.generalCannotUndoMessage))
             }
+            .sheet(isPresented: $isEditPresented) {
+                EditLibraryItemSheet(name: $editedName) {
+                    Task { await saveEditedMetadata() }
+                }
+            }
 #elseif os(iOS)
         Menu {
             contextMenu()
@@ -86,6 +93,11 @@ struct LibraryItemView: View {
             alertToast(.init(displayMode: .hud, type: .complete(.green), title: "Added"))
         }
         .buttonStyle(.borderless)
+        .sheet(isPresented: $isEditPresented) {
+            EditLibraryItemSheet(name: $editedName) {
+                Task { await saveEditedMetadata() }
+            }
+        }
 #endif
     }
     
@@ -100,6 +112,13 @@ struct LibraryItemView: View {
     @MainActor @ViewBuilder
     private func contextMenu() -> some View {
         if !inSelectionMode {
+            Button {
+                editedName = item.name ?? ""
+                isEditPresented = true
+            } label: {
+                Label("Edit", systemSymbol: .pencil)
+            }
+
             if fileState.currentActiveFile != nil {
                 Button {
                     addToCanvas()
@@ -181,6 +200,70 @@ struct LibraryItemView: View {
             context.delete(item)
             try context.save()
         }
+    }
+
+    private func saveEditedMetadata() async {
+        let context = PersistenceController.shared.container.newBackgroundContext()
+        let itemID = self.item.objectID
+        let trimmed = editedName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let alertToast = self.alertToast
+        do {
+            try await context.perform {
+                guard let item = context.object(with: itemID) as? LibraryItem else { return }
+                item.name = trimmed.isEmpty ? nil : trimmed
+                try context.save()
+            }
+            await MainActor.run {
+                libraryViewModel.objectWillChange.send()
+            }
+        } catch {
+            await MainActor.run { alertToast(error) }
+        }
+    }
+}
+
+private struct EditLibraryItemSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    @Binding var name: String
+    var onSave: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Edit")
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Name")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                TextField("Name", text: $name)
+                    .textFieldStyle(.roundedBorder)
+            }
+
+            HStack {
+                Spacer()
+                Button(role: .cancel) {
+                    dismiss()
+                } label: {
+                    Text("Cancel")
+                }
+                .modernButtonStyle(style: .glass, shape: .capsule)
+                
+                Button {
+                    onSave()
+                    dismiss()
+                } label: {
+                    Text("Save")
+                }
+                .keyboardShortcut(.defaultAction)
+                .modernButtonStyle(style: .glassProminent, shape: .capsule)
+            }
+        }
+        .padding(20)
+#if os(macOS)
+        .frame(minWidth: 360)
+#endif
     }
 }
 #if os(macOS)

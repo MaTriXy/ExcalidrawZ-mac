@@ -64,30 +64,34 @@ struct FileCheckpointRowView<Checkpoint: FileCheckpointRepresentable>: View {
     
     @MainActor @ViewBuilder
     private func label() -> some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text((checkpoint.filename ?? ""))
                     .font(.headline)
                 Spacer()
             }
-            
-            HStack(spacing: 0) {
-                if let file {
-                    if #available(macOS 13.0, iOS 16.0, *) {
-                        Text(.localizable(.checkpointsElementsDescription(file.elements.count)))
-                    } else {
-                        Text(file.elements.count.formatted())
+        
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 0) {
+                    if let file {
+                        if #available(macOS 13.0, iOS 16.0, *) {
+                            Text(.localizable(.checkpointsElementsDescription(file.elements.count)))
+                        } else {
+                            Text(file.elements.count.formatted())
+                        }
                     }
+                    Text(" · ")
+                    
+                    Text("\(fileSize.formatted(.byteCount(style: .file)))")
+                    
                 }
-                Text(" · ")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
                 
-                Text("\(fileSize.formatted(.byteCount(style: .file)))")
-                
-                Text(" · ")
                 Text(checkpoint.updatedAt?.formatted() ?? "")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
-            .font(.footnote)
-            .foregroundStyle(.secondary)
         }
         .lineLimit(1)
         .padding(.horizontal, 4)

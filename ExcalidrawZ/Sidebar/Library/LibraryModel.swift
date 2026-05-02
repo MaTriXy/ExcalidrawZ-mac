@@ -51,11 +51,11 @@ struct ExcalidrawLibrary: Codable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.type, forKey: .type)
         try container.encode(self.version, forKey: .version)
+        try container.encodeIfPresent(self.source, forKey: .source)
         switch self.version {
             case 1:
                 try container.encode(self.libraryItems.map{$0.elements}, forKey: .library)
             default:
-                try container.encode(self.source, forKey: .source)
                 try container.encode(self.libraryItems, forKey: .libraryItems)
         }
     }

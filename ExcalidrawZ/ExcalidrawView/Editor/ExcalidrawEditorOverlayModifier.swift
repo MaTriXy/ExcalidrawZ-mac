@@ -1,0 +1,167 @@
+//
+//  ExcalidrawEditorOverlayModifier.swift
+//  ExcalidrawZ
+//
+//  Created by Dove Zachary on 2022/12/27.
+//
+
+import SwiftUI
+
+import ChocofordUI
+
+/// Layers loading / empty / recover overlays on top of an `ExcalidrawCanvasView`.
+struct ExcalidrawEditorOverlayModifier: ViewModifier {
+    @Environment(\.managedObjectContext) var viewContext
+    @Environment(\.alertToast) var alertToast
+    @Environment(\.containerHorizontalSizeClass) var containerHorizontalSizeClass
+
+    @EnvironmentObject var layoutState: LayoutState
+    @EnvironmentObject private var fileState: FileState
+
+    @Binding var loadingState: ExcalidrawCanvasView.LoadingState
+    var hasFile: Bool
+
+    @State private var isProgressViewPresented = true
+    @State private var isSelectFilePlaceholderPresented = false
+
+    func body(content: Content) -> some View {
+        ZStack(alignment: .center) {
+            content
+                .opacity(isProgressViewPresented ? 0 : 1)
+                .opacity(hasFile ? 1 : 0)
+                .onChange(of: loadingState, debounce: 1) { newVal in
+                    isProgressViewPresented = newVal == .loading
+                }
+
+            if containerHorizontalSizeClass != .compact {
+                selectFilePlaceholderView()
+            }
+
+            if !hasFile {
+                emptyFilePlaceholderview()
+            }
+
+            if isProgressViewPresented {
+                VStack {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                    Text(.localizable(.webViewLoadingText))
+                }
+            } else if case .file(let file) = fileState.currentActiveFile, file.inTrash {
+                recoverOverlayView
+            }
+        }
+        .ignoresSafeArea(.container, edges: .bottom)
+        .transition(.opacity)
+        .animation(.default, value: isProgressViewPresented)
+    }
+
+    @MainActor @ViewBuilder
+    private var recoverOverlayView: some View {
+        Rectangle()
+            .opacity(0)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                layoutState.isResotreAlertIsPresented.toggle()
+            }
+            .alert(
+                String(localizable: .deletedFileRecoverAlertTitle),
+                isPresented: $layoutState.isResotreAlertIsPresented
+            ) {
+                Button(role: .cancel) {
+                    layoutState.isResotreAlertIsPresented.toggle()
+                } label: {
+                    Text(.localizable(.deletedFileRecoverAlertButtonCancel))
+                }
+
+                Button(role: {
+                    if #available(iOS 26.0, macOS 26.0, *) {
+                        return .confirm
+                    } else {
+                        return .none
+                    }
+                }()) {
+                    if case .file(let currentFile) = fileState.currentActiveFile {
+                        Task {
+                            let context = viewContext
+                            do {
+                                try await fileState
+                                    .recoverFile(fileID: currentFile.objectID, context: context)
+                            } catch {
+                                alertToast(error)
+                            }
+                        }
+                    }
+                } label: {
+                    Text(.localizable(.deletedFileRecoverAlertButtonRecover))
+                }
+                .modernButtonStyle(style: .glassProminent)
+            } message: {
+                Text(.localizable(.deletedFileRecoverAlertMessage))
+            }
+    }
+
+    @MainActor @ViewBuilder
+    private func selectFilePlaceholderView() -> some View {
+        ZStack {
+            if isSelectFilePlaceholderPresented {
+                if #available(macOS 14.0, iOS 17.0, *) {
+                    Rectangle()
+                        .fill(.windowBackground)
+                } else {
+                    Rectangle()
+                        .fill(Color.windowBackgroundColor)
+                }
+                ProgressView()
+            }
+        }
+        .onChange(of: fileState.currentActiveFile == nil, debounce: 0.1) { newValue in
+            isSelectFilePlaceholderPresented = newValue
+        }
+    }
+
+    @MainActor @ViewBuilder
+    private func emptyFilePlaceholderview() -> some View {
+        ZStack {
+            if isSelectFilePlaceholderPresented {
+                ZStack {
+                    if #available(macOS 14.0, iOS 17.0, *) {
+                        Rectangle()
+                            .fill(.windowBackground)
+                    } else {
+                        Rectangle()
+                            .fill(Color.windowBackgroundColor)
+                    }
+
+                    Text(.localizable(.excalidrawWebViewPlaceholderSelectFile))
+                        .font(.title)
+                        .foregroundStyle(.secondary)
+                }
+                .transition(
+                    .asymmetric(
+                        insertion: .identity,
+                        removal: .opacity.animation(.smooth.delay(0.2))
+                    )
+                )
+            }
+        }
+        .animation(.default, value: isSelectFilePlaceholderPresented)
+        .onChange(of: fileState.currentActiveFile == nil, debounce: 0.1) { newValue in
+            isSelectFilePlaceholderPresented = newValue
+        }
+        .contentShape(Rectangle())
+    }
+}
+
+extension View {
+    /// Adds the editor's loading / empty / recover overlays around an `ExcalidrawCanvasView`.
+    func excalidrawEditorOverlays(
+        loadingState: Binding<ExcalidrawCanvasView.LoadingState>,
+        hasFile: Bool
+    ) -> some View {
+        modifier(ExcalidrawEditorOverlayModifier(
+            loadingState: loadingState,
+            hasFile: hasFile
+        ))
+    }
+}
