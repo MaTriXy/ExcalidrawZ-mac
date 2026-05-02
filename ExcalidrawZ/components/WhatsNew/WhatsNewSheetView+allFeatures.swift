@@ -35,8 +35,8 @@ extension WhatsNewView {
         )
 
         WhatsNewFeatureRow(
-            title: .localizable(.whatsNewLibraryItemSearchTitle),
-            description: .localizable(.whatsNewLibraryItemSearchDescription),
+            title: .localizable(.whatsNewLibraryWorkflowOverhaulTitle),
+            description: .localizable(.whatsNewLibraryWorkflowOverhaulDescription),
             icon: Image(systemSymbol: .book)
         )
     }

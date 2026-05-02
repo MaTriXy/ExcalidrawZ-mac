@@ -28599,12 +28599,6 @@
     "libraryImportBrowserSheetButtonImportFromFile": {
       "extractionState": "manual",
       "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Import from file"
-          }
-        },
         "ar": {
           "stringUnit": {
             "state": "translated",
@@ -28615,6 +28609,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aus Datei importieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import from file"
           }
         },
         "es": {
@@ -28712,12 +28712,6 @@
     "libraryImportBrowserSheetTitle": {
       "extractionState": "manual",
       "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Excalidraw Libraries"
-          }
-        },
         "ar": {
           "stringUnit": {
             "state": "translated",
@@ -28728,6 +28722,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Excalidraw-Bibliotheken"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excalidraw Libraries"
           }
         },
         "es": {
@@ -28825,12 +28825,6 @@
     "libraryItemsSearchPrompt": {
       "extractionState": "manual",
       "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Filter library items..."
-          }
-        },
         "ar": {
           "stringUnit": {
             "state": "translated",
@@ -28841,6 +28835,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bibliothekselemente filtern..."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter library items..."
           }
         },
         "es": {
@@ -69847,228 +69847,228 @@
         }
       }
     },
-    "whatsNewLibraryItemSearchDescription": {
+    "whatsNewLibraryWorkflowOverhaulDescription": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "حرّر اسم عنصر المكتبة من قائمة السياق الخاصة به، وقم بتصفية المكتبة بالاسم للعثور بسرعة على ما تحتاجه."
+            "value": "تصفح libraries.excalidraw.com من داخل التطبيق — زر \"Add to Excalidraw\" يستورد الأشكال مباشرةً إلى مجموعتك دون المرور بالمتصفح. بعد الإضافة، يمكنك تصفية عناصر المكتبة بالاسم من المُفتش وإعادة تسميتها عبر قائمة السياق."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den Namen eines Bibliothekselements im Kontextmenü bearbeiten und die Bibliothek nach Namen filtern, um schnell zu finden, was benötigt wird."
+            "value": "Durchsuche libraries.excalidraw.com direkt in der App – „Zu Excalidraw hinzufügen“ importiert Formen direkt in deine Sammlung, ganz ohne Umweg über den Browser. Nach der Installation kannst du Bibliothekselemente im Inspektor nach Namen filtern und sie über das Kontextmenü umbenennen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Edit a library item's name from its context menu, and filter the library by name to find what you need fast."
+            "value": "Browse libraries.excalidraw.com inside the app — \\\"Add to Excalidraw\\\" imports shapes straight into your collection, no browser detour. Once installed, filter library items by name from the inspector and rename them via the context menu."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Edita el nombre de un elemento de la biblioteca desde su menú contextual y filtra la biblioteca por nombre para encontrar lo que necesitas rápidamente."
+            "value": "Navega por libraries.excalidraw.com dentro de la app: \"Add to Excalidraw\" importa formas directamente en tu colección, sin necesidad de abrir el navegador. Una vez instalada, filtra los elementos de la biblioteca por nombre desde el inspector y renómbralos desde el menú contextual."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifiez le nom d'un élément de la bibliothèque depuis son menu contextuel, et filtrez la bibliothèque par nom pour trouver rapidement ce dont vous avez besoin."
+            "value": "Parcourez libraries.excalidraw.com dans l'application — « Ajouter à Excalidraw » importe les formes directement dans votre collection, sans passer par le navigateur. Une fois installée, filtrez les éléments de la bibliothèque par nom depuis l'inspecteur et renommez-les via le menu contextuel."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "किसी लाइब्रेरी आइटम का नाम उसके संदर्भ मेनू से संपादित करें, और नाम से लाइब्रेरी को फ़िल्टर करके आप जो चाहिए उसे तेज़ी से ढूंढें।"
+            "value": "ऐप के भीतर libraries.excalidraw.com ब्राउज़ करें — \"Add to Excalidraw\" शेप्स को सीधे आपके कलेक्शन में इम्पोर्ट कर देता है, यानी ब्राउज़र के जरिए अलग से जाने की ज़रूरत नहीं। एक बार इंस्टॉल होने पर, इंस्पेक्टर से लाइब्रेरी आइटमों को नाम से फ़िल्टर करें और कॉन्टेक्स्ट मेनू से उनका नाम बदलें।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifica il nome di un elemento della libreria dal suo menu contestuale e filtra la libreria per nome per trovare rapidamente ciò che ti serve."
+            "value": "Naviga libraries.excalidraw.com dall'interno dell'app — \"Aggiungi a Excalidraw\" importa le forme direttamente nella tua raccolta, senza passare dal browser. Una volta installata, filtra gli elementi della libreria per nome dall'Inspector e rinominali tramite il menu contestuale."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ライブラリ項目の名前をコンテキストメニューから編集し、名前でフィルタして目的の項目を素早く見つけられます。"
+            "value": "アプリ内で libraries.excalidraw.com を閲覧できるようになりました。「Add to Excalidraw」を使えば、ブラウザを経由せず図形をそのままコレクションにインポートできます。インストール後はインスペクタからライブラリ項目を名前でフィルタして目的の項目を素早く見つけ、コンテキストメニューで名前を変更できます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "라이브러리 항목의 이름을 컨텍스트 메뉴에서 편집하고, 이름으로 라이브러리를 필터링하여 원하는 항목을 빠르게 찾으세요."
+            "value": "앱 내에서 libraries.excalidraw.com을 바로 둘러보고 — 'Add to Excalidraw'를 선택하면 브라우저를 거치지 않고 바로 컬렉션으로 도형을 가져옵니다. 설치 후에는 인스펙터에서 항목 이름으로 라이브러리를 필터링하고, 컨텍스트 메뉴에서 이름을 변경할 수 있습니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bewerk de naam van een bibliotheekitem via het contextmenu en filter de bibliotheek op naam om snel te vinden wat je nodig hebt."
+            "value": "Blader door libraries.excalidraw.com binnen de app — \"Add to Excalidraw\" importeert vormen rechtstreeks in je collectie, zonder omweg via de browser. Eenmaal geïnstalleerd kun je bibliotheekitems in de inspector op naam filteren en via het contextmenu hernoemen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Edytuj nazwę elementu biblioteki z menu kontekstowego i filtruj bibliotekę po nazwie, by szybko znaleźć to, czego potrzebujesz."
+            "value": "Przeglądaj libraries.excalidraw.com bezpośrednio w aplikacji — opcja \"Add to Excalidraw\" importuje kształty prosto do twojej kolekcji, bez konieczności otwierania przeglądarki. Po zainstalowaniu możesz filtrować elementy biblioteki po nazwie w inspektorze i zmieniać ich nazwy z menu kontekstowego."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Edite o nome de um item da biblioteca a partir do menu de contexto e filtre a biblioteca por nome para encontrar o que precisa rapidamente."
+            "value": "Veja libraries.excalidraw.com dentro do app — o botão \"Add to Excalidraw\" importa formas diretamente para sua coleção, sem passar pelo navegador. Depois de instaladas, filtre os itens da biblioteca por nome no inspector e renomeie-os pelo menu de contexto."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Переименовывайте элементы библиотеки через контекстное меню и фильтруйте библиотеку по имени, чтобы быстро находить нужное."
+            "value": "Просматривайте libraries.excalidraw.com прямо в приложении — «Добавить в Excalidraw» импортирует фигуры напрямую в вашу коллекцию, без перехода в браузер. После установки можно фильтровать элементы библиотеки по имени в инспекторе и переименовывать их через контекстное меню."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "แก้ไขชื่อรายการในไลบรารีจากเมนูบริบท และกรองไลบรารีตามชื่อเพื่อค้นหาได้อย่างรวดเร็ว"
+            "value": "เรียกดู libraries.excalidraw.com ได้ภายในแอป — ปุ่ม \"Add to Excalidraw\" จะนำรูปร่างเข้าสู่คอลเลกชันของคุณโดยตรง โดยไม่ต้องผ่านเบราว์เซอร์แยก เมื่อติดตั้งแล้ว คุณสามารถกรองรายการในไลบรารีตามชื่อจากแผง Inspector และเปลี่ยนชื่อรายการผ่านเมนูบริบทได้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir kütüphane öğesinin adını bağlam menüsünden düzenleyin ve ihtiyacınızı hızlıca bulmak için kütüphaneyi ada göre filtreleyin."
+            "value": "Uygulama içinden libraries.excalidraw.com'da gezinin — \"Add to Excalidraw\" seçeneği şekilleri tarayıcıya gitmeden doğrudan koleksiyonunuza aktarır. Yüklendikten sonra Inspector'dan kütüphane öğelerini ada göre filtreleyebilir ve bağlam menüsünden yeniden adlandırabilirsiniz."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chỉnh tên phần tử thư viện từ menu ngữ cảnh của nó, và lọc thư viện theo tên để tìm nhanh thứ bạn cần."
+            "value": "Duyệt libraries.excalidraw.com ngay trong ứng dụng — chọn \"Add to Excalidraw\" sẽ nhập trực tiếp các hình vào bộ sưu tập của bạn, không cần chuyển qua trình duyệt. Sau khi cài đặt, lọc các mục thư viện theo tên từ bảng thuộc tính (inspector) và đổi tên chúng qua menu ngữ cảnh."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "可在库项的上下文菜单中编辑名称，并按名称筛选库以快速查找所需内容。"
+            "value": "在应用内浏览 libraries.excalidraw.com —— 选择“添加到 Excalidraw”可将形状直接导入到你的收藏，无需通过浏览器跳转。安装后，可在检查器中按名称筛选库项，并通过上下文菜单重命名它们。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "可從資源庫項目的內容選單編輯其名稱，並依名稱篩選資源庫以快速找到所需項目。"
+            "value": "可在應用程式內瀏覽 libraries.excalidraw.com — 點選「加入 Excalidraw」可將圖形直接匯入你的收藏，無需透過瀏覽器中轉。安裝後，可在檢查器中以名稱篩選資源庫項目，並可從內容選單重新命名它們。"
           }
         }
       }
     },
-    "whatsNewLibraryItemSearchTitle": {
+    "whatsNewLibraryWorkflowOverhaulTitle": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إعادة تسمية وتصفية عناصر المكتبة"
+            "value": "إعادة تصميم سير عمل المكتبة"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bibliothekselemente umbenennen & filtern"
+            "value": "Überarbeiteter Bibliotheks-Workflow"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rename & Filter Library Items"
+            "value": "Library Workflow Overhaul"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Renombrar y filtrar elementos de la biblioteca"
+            "value": "Rediseño del flujo de trabajo de las bibliotecas"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Renommer et filtrer les éléments de la bibliothèque"
+            "value": "Refonte du flux de travail des bibliothèques"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "लाइब्रेरी आइटम का नाम बदलें और फ़िल्टर करें"
+            "value": "लाइब्रेरी कार्यप्रवाह में व्यापक बदलाव"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rinomina e filtra elementi della libreria"
+            "value": "Rifacimento del flusso di lavoro delle librerie"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ライブラリ項目の名前変更とフィルタリング"
+            "value": "ライブラリワークフローの刷新"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "라이브러리 항목 이름 변경 및 필터링"
+            "value": "라이브러리 워크플로우 전면 개편"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bibliotheekitems hernoemen en filteren"
+            "value": "Bibliotheekworkflow vernieuwd"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zmienianie nazwy i filtrowanie elementów biblioteki"
+            "value": "Przebudowa przepływu pracy z bibliotekami"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Renomear e Filtrar Itens da Biblioteca"
+            "value": "Reformulação do fluxo de trabalho das bibliotecas"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Переименование и фильтрация элементов библиотеки"
+            "value": "Переработка работы с библиотеками"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เปลี่ยนชื่อและกรองรายการในไลบรารี"
+            "value": "ปรับโฉมเวิร์กโฟลว์ของไลบรารี"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kütüphane Öğelerini Yeniden Adlandırma ve Filtreleme"
+            "value": "Kütüphane İş Akışı Yenilemesi"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đổi tên & Lọc phần tử thư viện"
+            "value": "Cải tổ quy trình làm việc với thư viện"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "重命名与筛选库项"
+            "value": "库工作流程全面改造"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "重新命名與篩選資源庫項目"
+            "value": "資源庫工作流程全面改造"
           }
         }
       }
