@@ -194,7 +194,7 @@ extension ExcalidrawCore {
     /// — currently unused, but typed so we don't have to touch this signature again.
     @discardableResult
     func loadFile(from file: ExcalidrawFile?, force: Bool = false) async -> LoadFileResult? {
-        guard !self.isLoading, !self.webView.isLoading else { return nil }
+        guard !self.isLoading, await !self.webView.isLoading else { return nil }
         guard let file = file,
               let data = file.content else { return nil }
         do {
@@ -610,7 +610,12 @@ extension ExcalidrawCore {
     @MainActor
     public func setAvailableFonts(fontFamilies: [String]) async throws {
         // NSFontManager.shared.availableFontFamilies.sorted()
-        try await webView.evaluateJavaScript("window.excalidrawZHelper.setAvailableFonts(\(fontFamilies)); 0;")
+        // Optional chaining (`?.`) on both the helper and the method: if the JS
+        // helper hasn't finished bootstrapping yet (we sometimes call this in the
+        // narrow window between the `onload` message and the helper definition),
+        // the call silently no-ops instead of throwing. The next sync pass will
+        // re-apply fonts when the helper is ready.
+        try await webView.evaluateJavaScript("window.excalidrawZHelper?.setAvailableFonts?.(\(fontFamilies)); 0;")
     }
     
     
