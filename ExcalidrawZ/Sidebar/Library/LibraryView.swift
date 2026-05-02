@@ -65,15 +65,17 @@ struct InspectorPresentationModifier: ViewModifier {
     /// Picks the view shown inside the inspector based on the active tab.
     @MainActor @ViewBuilder
     private func inspectorContent() -> some View {
-        switch layoutState.activeInspectorTab {
-            case .library:
-                LibraryView(librariesToImport: $librariesToImport)
-            case .history:
-                FileHistoryInspectorContent()
-            case .preference:
-                CanvasSettingsInspectorContent()
-            case .search:
-                SearchInspectorContent()
+        if layoutState.isInspectorPresented {
+            switch layoutState.activeInspectorTab {
+                case .library:
+                    LibraryView(librariesToImport: $librariesToImport)
+                case .history:
+                    FileHistoryInspectorContent()
+                case .preference:
+                    CanvasSettingsInspectorContent()
+                case .search:
+                    SearchInspectorContent()
+            }
         }
     }
 
@@ -84,9 +86,9 @@ struct InspectorPresentationModifier: ViewModifier {
             case .history:
                 String(localizable: .checkpoints)
             case .preference:
-                "Preference"
+                String(localizable: .canvasPreferencesTitle)
             case .search:
-                "Search"
+                String(localizable: .searchButtonTitle)
         }
     }
 
@@ -153,21 +155,10 @@ struct InspectorHeaderToolbar: ToolbarContent {
     let isInspectorPresented: Bool
 
     var body: some ToolbarContent {
-        ToolbarItem(placement: .destructiveAction) {
-            if #available(macOS 26.0, *) {} else {
-                Color.clear
-            }
-        }
 
         /// This is the key to make sidebar toggle at the right side.
         /// The `status` is work well in macOS 15.0+. But not well in macOS 14.0
-        ToolbarItemGroup(placement: {
-            if #available(macOS 15.0, iOS 18.0, *) {
-                .status
-            } else {
-                .cancellationAction
-            }
-        }()) {
+        ToolbarItemGroup(placement:  .status) {
             if isInspectorPresented {
                 if #available(macOS 15.0, iOS 18.0, *) {} else {
                     Spacer()
@@ -186,6 +177,7 @@ struct InspectorHeaderToolbar: ToolbarContent {
                 }
             }
         }
+        
     }
 }
 #endif
@@ -226,6 +218,12 @@ struct LibraryView: View {
     @State private var selectedItems = Set<LibraryItem>()
 
     @State private var searchQuery: String = ""
+
+    @State private var isLibraryBrowserPresented: Bool = false
+    /// Set inside the browser sheet when the user opts to import from file —
+    /// consumed in `onDismiss` to trigger the file importer once the sheet has
+    /// fully animated away (presenting two sheets back-to-back races otherwise).
+    @State private var pendingFileImportAfterBrowser: Bool = false
     
     var body: some View {
         ZStack {
@@ -263,15 +261,119 @@ struct LibraryView: View {
         .onAppear {
             viewModel.excalidrawWebCoordinator = exportState.excalidrawWebCoordinator
         }
+        .sheet(isPresented: $isLibraryBrowserPresented, onDismiss: {
+            if pendingFileImportAfterBrowser {
+                pendingFileImportAfterBrowser = false
+                isFileImpoterPresented = true
+            }
+        }) {
+            LibraryBrowserSheet(onRequestManualImport: {
+                pendingFileImportAfterBrowser = true
+            })
+        }
+        // These were attached to `bottomBar()` originally, but the toolbar buttons
+        // now share the same flags — and on macOS 26+ the bottom bar isn't even in
+        // the view tree, so the modifiers must live at body level to be reachable.
+        .confirmationDialog(
+            String(localizable: .librariesRemoveAllConfirmationTitle),
+            isPresented: $isRemoveAllConfirmationPresented
+        ) {
+            Button(role: .destructive) {
+                removeAllItems()
+            } label: {
+                Label(.localizable(.librariesRemoveAllConfirmationConfirm), systemSymbol: .trash)
+            }
+        } message: {
+            Text(.localizable(.generalCannotUndoMessage))
+        }
+        .confirmationDialog(
+            {
+                if #available(macOS 13.0, iOS 16.0, *) {
+                    String(localizable: .librariesRemoveSelectionsConfirmationTitle(selectedItems.count))
+                } else {
+                    String(localizable: .generalButtonDelete)
+                }
+            }(),
+            isPresented: $isRemoveSelectionsConfirmationPresented
+        ) {
+            Button(role: .destructive) {
+                removeSelectedItems()
+            } label: {
+                Label(.localizable(.librariesRemoveSelectionsConfirmationConfirm), systemSymbol: .trash)
+            }
+        } message: {
+            Text(.localizable(.generalCannotUndoMessage))
+        }
+        .fileExporter(
+            isPresented: $isFileExporterPresented,
+            documents: libraries.compactMap{
+                (try? JSONEncoder().encode(ExcalidrawLibrary(library: $0)), $0.name)
+            }.map{ ExcalidrawlibFile(data: $0.0, filename: $0.1) },
+            contentType: .excalidrawlibFile
+        ) { result in
+            switch result {
+                case .success:
+                    alertToast(.init(displayMode: .hud, type: .complete(.green), title: String(localizable: .librariesExportLibraryDone)))
+                case .failure(let failure):
+                    alertToast(failure)
+            }
+        }
     }
-    
+
 #if os(macOS)
+    @available(macOS 13.0, *)
     @MainActor @ToolbarContentBuilder
     private func toolbar() -> some ToolbarContent {
+        if #available(macOS 26.0, *) {
+            ToolbarItemGroup(placement: .destructiveAction) {
+                if !libraries.isEmpty {
+                    Button {
+                        inSelectionMode.toggle()
+                        if !inSelectionMode { selectedItems.removeAll() }
+                    } label: {
+                        Label(
+                            .localizable(inSelectionMode ? .librariesButtonSelectCancel : .librariesButtonSelect),
+                            systemSymbol: inSelectionMode ? .xmark : .checklist
+                        )
+                    }
+                }
+                
+            }
+            
+            // This work...
+            ToolbarItemGroup(placement: .principal) {
+                Spacer()
+            }
+            
+            // Not working...
+            ToolbarSpacer(.fixed)
+        }
+        
         InspectorHeaderToolbar(
             title: String(localizable: .librariesTitle),
             isInspectorPresented: layoutState.isInspectorPresented
         )
+        
+        if #available(macOS 26.0, *) {
+            ToolbarItemGroup(placement: .automatic) {
+                if inSelectionMode {
+                    Button(role: .destructive) {
+                        isRemoveSelectionsConfirmationPresented.toggle()
+                    } label: {
+                        Label(.localizable(.librariesButtonRemoveSelections), systemSymbol: .trash)
+                    }
+                    .disabled(selectedItems.isEmpty)
+                }
+                
+                Menu {
+                    bottomBarMenuItems()
+                        .labelStyle(.titleAndIcon)
+                } label: {
+                    Label(.localizable(.librariesButtonLibraryOptions), systemSymbol: .ellipsis)
+                }
+                .menuIndicator(.hidden)
+            }
+        }
     }
 #endif
 
@@ -290,22 +392,24 @@ struct LibraryView: View {
                         .padding(.horizontal, 10)
                         .padding(.top, 8)
                         .padding(.bottom, 4)
-
+                    
                     scrollContent()
                         .readSize($scrollViewSize)
-
-                    Divider()
-
-                    bottomBar()
+                    
+                    if #available(macOS 26.0, *) { } else {
+                        Divider()
+                        
+                        bottomBar()
 #if os(iOS)
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 16)
-                        .frame(height: 56, alignment: .top)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .frame(height: 56, alignment: .top)
 #else
-                        .padding(.vertical, 2)
-                        .padding(.horizontal, 8)
-                        .frame(height: 32)
+                            .padding(.vertical, 2)
+                            .padding(.horizontal, 8)
+                            .frame(height: 32)
 #endif
+                    }
                 }
             }
         }
@@ -316,7 +420,11 @@ struct LibraryView: View {
         HStack(spacing: 8) {
             Image(systemSymbol: .magnifyingglass)
                 .foregroundStyle(.secondary)
-            TextField("Filter library items...", text: $searchQuery)
+            TextField(
+                "",
+                text: $searchQuery,
+                prompt: Text(localizable: .libraryItemsSearchPrompt)
+            )
                 .textFieldStyle(.plain)
             if !searchQuery.isEmpty {
                 Button {
@@ -497,54 +605,8 @@ struct LibraryView: View {
                     }
                 }
         }
-        .confirmationDialog(
-            String(localizable: .librariesRemoveAllConfirmationTitle),
-            isPresented: $isRemoveAllConfirmationPresented
-        ) {
-            Button(role: .destructive) {
-                removeAllItems()
-            } label: {
-                Label(.localizable(.librariesRemoveAllConfirmationConfirm), systemSymbol: .trash)
-            }
-        } message: {
-            Text(.localizable(.generalCannotUndoMessage))
-        }
-        .confirmationDialog(
-            {
-                if #available(macOS 13.0, iOS 16.0, *) {
-                    String(localizable: .librariesRemoveSelectionsConfirmationTitle(selectedItems.count))
-                } else {
-                    String(localizable: .generalButtonDelete)
-                }
-            }(),
-            isPresented: $isRemoveSelectionsConfirmationPresented
-        ) {
-            Button(role: .destructive) {
-                removeSelectedItems()
-            } label: {
-                Label(.localizable(.librariesRemoveSelectionsConfirmationConfirm), systemSymbol: .trash)
-            }
-        } message: {
-            Text(.localizable(.generalCannotUndoMessage))
-        }
-        .fileExporter(
-            isPresented: $isFileExporterPresented,
-            documents: libraries.compactMap{
-                (try? JSONEncoder().encode(ExcalidrawLibrary(library: $0)), $0.name)
-            }.map{ ExcalidrawlibFile(data: $0.0, filename: $0.1) },
-            contentType: .excalidrawlibFile
-        ) { result in
-            switch result {
-                case .success:
-                    alertToast(.init(displayMode: .hud, type: .complete(.green), title: String(localizable: .librariesExportLibraryDone)))
-                case .failure(let failure):
-                    alertToast(failure)
-            }
-        }
     }
-    
-    
-    
+
     @MainActor @ViewBuilder
     private func bottomBarMenu() -> some View {
         Menu {
@@ -586,7 +648,9 @@ struct LibraryView: View {
             
             Divider()
             
-            Link(destination: URL(string: "https://libraries.excalidraw.com")!) {
+            Button {
+                isLibraryBrowserPresented = true
+            } label: {
                 Label(.localizable(.librariesNoItemsGoToExcalidrawLibraries), systemSymbol: .link)
             }
             
@@ -602,8 +666,10 @@ struct LibraryView: View {
     
     @MainActor @ViewBuilder
     private func importButton() -> some View {
+        // Now opens the in-app library browser; users can drill into a manual
+        // file import from the sheet's header if they have a local .excalidrawlib.
         Button {
-            isFileImpoterPresented.toggle()
+            isLibraryBrowserPresented = true
         } label: {
             Label(.localizable(.librariesButtonImport), systemSymbol: .squareAndArrowDown)
         }
