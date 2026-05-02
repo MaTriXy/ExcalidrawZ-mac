@@ -32,6 +32,13 @@ final class CanvasPreferencesState: ObservableObject {
         case lasso
     }
 
+    /// Wrap (contain): elements must be fully inside the box.
+    /// Overlap: any intersection counts.
+    enum BoxSelectionMode: String, Codable, Hashable {
+        case contain
+        case overlap
+    }
+
     /// Set by `ExcalidrawCanvasView.setupCoordinators` once the engine is ready.
     weak var coordinator: ExcalidrawCore?
 
@@ -64,6 +71,9 @@ final class CanvasPreferencesState: ObservableObject {
     @Published var preferredSelectionTool: PreferredSelectionTool = .selection {
         didSet { pushField { $0.preferredSelectionTool = preferredSelectionTool } }
     }
+    @Published var boxSelectionMode: BoxSelectionMode = .contain {
+        didSet { pushField { $0.boxSelectionMode = boxSelectionMode } }
+    }
     @Published var stats: Bool = false {
         didSet { pushField { $0.stats = stats } }
     }
@@ -82,6 +92,7 @@ final class CanvasPreferencesState: ObservableObject {
         if let value = snapshot.isMidpointSnappingEnabled { isMidpointSnappingEnabled = value }
         if let value = snapshot.bindingPreference { bindingPreference = value }
         if let value = snapshot.preferredSelectionTool { preferredSelectionTool = value }
+        if let value = snapshot.boxSelectionMode { boxSelectionMode = value }
         if let value = snapshot.stats { stats = value }
     }
 
@@ -108,6 +119,7 @@ struct CanvasPreferencesSnapshot: Codable {
     var isMidpointSnappingEnabled: Bool?
     var bindingPreference: CanvasPreferencesState.BindingPreference?
     var preferredSelectionTool: CanvasPreferencesState.PreferredSelectionTool?
+    var boxSelectionMode: CanvasPreferencesState.BoxSelectionMode?
     var stats: Bool?
 
     enum CodingKeys: String, CodingKey {
@@ -120,6 +132,7 @@ struct CanvasPreferencesSnapshot: Codable {
         case isMidpointSnappingEnabled
         case bindingPreference
         case preferredSelectionTool
+        case boxSelectionMode
         case stats
     }
 
@@ -134,6 +147,7 @@ struct CanvasPreferencesSnapshot: Codable {
         try container.encodeIfPresent(isMidpointSnappingEnabled, forKey: .isMidpointSnappingEnabled)
         try container.encodeIfPresent(bindingPreference, forKey: .bindingPreference)
         try container.encodeIfPresent(preferredSelectionTool, forKey: .preferredSelectionTool)
+        try container.encodeIfPresent(boxSelectionMode, forKey: .boxSelectionMode)
         try container.encodeIfPresent(stats, forKey: .stats)
     }
 }

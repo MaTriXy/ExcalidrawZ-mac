@@ -30,7 +30,7 @@ enum ExcalidrawTool: Int, Hashable, CaseIterable {
     case magicFrame
     
     case hand
-//    case lasso
+    case lasso
     
     // extra tool
 //    case text2Diagram
@@ -105,49 +105,51 @@ enum ExcalidrawTool: Int, Hashable, CaseIterable {
                 Character("9")
             case .hand:
                 Character("h")
-            case .webEmbed, .magicFrame:
+            case .webEmbed, .magicFrame, .lasso:
                 nil
         }
     }
     
-    var localization: LocalizedStringKey {
+    var localization: String {
         switch self {
             case .hand:
-                    .localizable(.toolbarHand)
+                String(localizable: .toolbarHand)
             case .eraser:
-                    .localizable(.toolbarEraser)
+                String(localizable: .toolbarEraser)
             case .cursor:
-                    .localizable(.toolbarSelection)
+                String(localizable: .toolbarSelection)
             case .rectangle:
-                    .localizable(.toolbarRectangle)
+                String(localizable: .toolbarRectangle)
             case .diamond:
-                    .localizable(.toolbarDiamond)
+                String(localizable: .toolbarDiamond)
             case .ellipse:
-                    .localizable(.toolbarEllipse)
+                String(localizable: .toolbarEllipse)
             case .arrow:
-                    .localizable(.toolbarArrow)
+                String(localizable: .toolbarArrow)
             case .line:
-                    .localizable(.toolbarLine)
+                String(localizable: .toolbarLine)
             case .freedraw:
-                    .localizable(.toolbarDraw)
+                String(localizable: .toolbarDraw)
             case .text:
-                    .localizable(.toolbarText)
+                String(localizable: .toolbarText)
             case .image:
-                    .localizable(.toolbarInsertImage)
+                String(localizable: .toolbarInsertImage)
             case .laser:
-                    .localizable(.toolbarLaser)
+                String(localizable: .toolbarLaser)
             case .webEmbed:
-                    .localizable(.toolbarWebEmbed)
+                String(localizable: .toolbarWebEmbed)
             case .frame:
-                    .localizable(.toolbarFrame)
+                String(localizable: .toolbarFrame)
             case .magicFrame:
-                    .localizable(.toolbarMagicFrame)
+                String(localizable: .toolbarMagicFrame)
 //            case .lasso:
 //                    .localizable(.toolbarLasso)
 //            case .text2Diagram:
 //                    .localizable(.toolbarText2Diagram)
 //            case .mermaid:
 //                    .localizable(.toolbarMermaid)
+            case .lasso:
+                "Lasso Selection"
         }
     }
     
@@ -183,8 +185,8 @@ enum ExcalidrawTool: Int, Hashable, CaseIterable {
                 "\(String(localizable: .toolbarMagicFrame))"
             case .hand:
                 "\(String(localizable: .toolbarHand)) - H"
-//            case .lasso:
-//                ""
+            case .lasso:
+                "Lasso Selection"
         }
     }
     
@@ -204,10 +206,9 @@ enum ExcalidrawTool: Int, Hashable, CaseIterable {
                         .font(.body.weight(.semibold))
                 }
             case .cursor:
-                Image(systemSymbol: .cursorarrow)
-                    .resizable()
-                    .scaledToFit()
-                    .font(.body.weight(.semibold))
+                Cursor()
+                    .stroke(.primary, lineWidth: strokeLineWidth)
+                    .aspectRatio(1, contentMode: .fit)
 
             case .rectangle:
                 RoundedRectangle(cornerRadius: 3)
@@ -270,6 +271,11 @@ enum ExcalidrawTool: Int, Hashable, CaseIterable {
                     .resizable()
                     .scaledToFit()
                     .font(.body.weight(.semibold))
+            case .lasso:
+                Image(systemSymbol: .selectionPinInOut)
+                    .resizable()
+                    .scaledToFit()
+                    .font(.body.weight(.semibold))
 //            case .text2Diagram, .mermaid:
 //                EmptyView()
         }
@@ -312,6 +318,8 @@ final class ToolState: ObservableObject {
                 try await self.excalidrawWebCoordinator?.toggleToolbarAction(tool: .webEmbed)
             case .magicFrame:
                 try await self.excalidrawWebCoordinator?.toggleToolbarAction(tool: .magicFrame)
+            case .lasso:
+                try await self.excalidrawWebCoordinator?.toggleToolbarAction(tool: .lasso)
             default:
                 if let key = tool.keyEquivalent {
                     try await self.excalidrawWebCoordinator?.toggleToolbarAction(key: key)

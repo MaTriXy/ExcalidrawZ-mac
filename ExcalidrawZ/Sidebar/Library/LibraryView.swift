@@ -286,10 +286,10 @@ struct LibraryView: View {
 #endif
             } else {
                 VStack(spacing: 0) {
-//                    searchField
-//                        .padding(.horizontal, 10)
-//                        .padding(.top, 8)
-//                        .padding(.bottom, 4)
+                    searchField
+                        .padding(.horizontal, 10)
+                        .padding(.top, 8)
+                        .padding(.bottom, 4)
 
                     scrollContent()
                         .readSize($scrollViewSize)

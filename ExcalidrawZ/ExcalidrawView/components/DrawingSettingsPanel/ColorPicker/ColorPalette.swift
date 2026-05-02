@@ -31,6 +31,16 @@ struct ColorPalette {
         "#ffec99"       // yellow[2]
     ]
 
+    /// Canvas background colors: white + slate / blue / yellow / bronze tints (the [2] step of each family).
+    /// Shown as quick picks for the canvas-level `viewBackgroundColor`.
+    static let canvasBackgroundQuickPicks: [String] = [
+        "#ffffff",   // White
+        "#f8f9fa",   // Slate 2
+        "#f5faff",   // Blue 2
+        "#fffce8",   // Yellow 2
+        "#fdf8f6",   // Bronze 2
+    ]
+
     // MARK: - Transparent Pattern
 
     /// Base64 encoded 16x16 PNG checkboard pattern from excalidraw

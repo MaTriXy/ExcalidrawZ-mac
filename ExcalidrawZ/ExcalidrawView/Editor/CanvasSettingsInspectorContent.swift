@@ -65,7 +65,7 @@ struct CanvasSettingsInspectorContent: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Canvas background")
             ColorButtonGroup(
-                colors: ColorPalette.backgroundQuickPicks,
+                colors: ColorPalette.canvasBackgroundQuickPicks,
                 selectedColor: canvasPrefs.viewBackgroundColor
             ) { color in
                 canvasPrefs.viewBackgroundColor = color
@@ -78,9 +78,9 @@ struct CanvasSettingsInspectorContent: View {
         HStack {
             Text("Select on")
             Spacer()
-            Picker("Select on", selection: $canvasPrefs.preferredSelectionTool) {
-                Text("Wrap").tag(CanvasPreferencesState.PreferredSelectionTool.selection)
-                Text("Overlap").tag(CanvasPreferencesState.PreferredSelectionTool.lasso)
+            Picker("Select on", selection: $canvasPrefs.boxSelectionMode) {
+                Text("Wrap").tag(CanvasPreferencesState.BoxSelectionMode.contain)
+                Text("Overlap").tag(CanvasPreferencesState.BoxSelectionMode.overlap)
             }
             .pickerStyle(.segmented)
             .labelsHidden()

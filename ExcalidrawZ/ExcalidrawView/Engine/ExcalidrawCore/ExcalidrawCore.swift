@@ -332,6 +332,7 @@ extension ExcalidrawCore {
         case text2Diagram = "text2diagram"
         case mermaid = "mermaid"
         case magicFrame = "wireframe"
+        case lasso = "lasso"
     }
     @MainActor
     func toggleToolbarAction(tool: ExtraTool) async throws {
