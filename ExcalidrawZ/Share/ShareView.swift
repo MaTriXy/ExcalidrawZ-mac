@@ -97,8 +97,13 @@ struct ShareView: View {
                 return 442
             case .exportFile:
                 return 250
+#if DEBUG
             case .svgPreview, .none:
                 return 300
+                #else
+            case .none:
+                return 300
+#endif
         }
         #else
         return 0

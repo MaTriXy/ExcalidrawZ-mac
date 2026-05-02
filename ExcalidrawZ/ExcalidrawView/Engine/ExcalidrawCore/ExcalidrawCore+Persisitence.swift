@@ -8,16 +8,14 @@
 import Foundation
 
 extension ExcalidrawCore {
-    func loadFile(from file: File?, force: Bool = false) {
-        guard !self.isLoading, !self.webView.isLoading else { return }
+    func loadFile(from file: File?, force: Bool = false) async {
+        guard !self.isLoading, await !self.webView.isLoading else { return }
         guard let fileID = file?.id,
-            let data = file?.content else { return }
-        Task.detached {
-            do {
-                try await self.webActor.loadFile(id: fileID.uuidString, data: data, force: force)
-            } catch {
-                self.publishError(error)
-            }
+              let data = file?.content else { return }
+        do {
+            try await self.webActor.loadFile(id: fileID.uuidString, data: data, force: force)
+        } catch {
+            self.publishError(error)
         }
     }
 }
